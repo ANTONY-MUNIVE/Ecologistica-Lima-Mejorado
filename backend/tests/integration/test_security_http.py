@@ -22,8 +22,8 @@ from app.db.session import session_factory
 from app.main import create_app
 from app.models import Auditoria, Sesion, Usuario, Vehiculo
 from app.repositories.auditoria import AuditStorageError, Evento
+from app.repositories.sesiones import SesionRepository, SessionStorageError
 from app.repositories.usuarios import UsuarioRepository
-from app.services.autenticacion import AuthenticationUnavailable
 from app.services.credenciales import CredentialService
 
 pytestmark = pytest.mark.integration
@@ -512,11 +512,14 @@ def test_security_control_failure_returns_503_and_never_executes_endpoint(
     security_database, monkeypatch, failure
 ):
     factory, database_url = security_database
-    create_user(factory, f"{failure}-failure@example.test", "ADMINISTRADOR")
+    email = f"{failure}-failure@example.test"
+    create_user(factory, email, "ADMINISTRADOR")
     app = security_app(database_url)
 
     with TestClient(app) as client:
-        login(client, f"{failure}-failure@example.test")
+        login(client, email)
+        token = client.cookies.get(COOKIE_NAME)
+        assert token
 
         if failure == "audit":
 
@@ -530,13 +533,16 @@ def test_security_control_failure_returns_503_and_never_executes_endpoint(
             )
         else:
 
-            def fail_resolution(_token):
-                raise AuthenticationUnavailable("private session database details")
+            def fail_session_storage(_repository, _token_hash):
+                assert _token_hash == hash_session_token(token)
+                raise SessionStorageError(
+                    f"private SQL traceback {email} {token} {COOKIE_NAME}"
+                )
 
             monkeypatch.setattr(
-                app.state.authentication_service,
-                "resolve",
-                fail_resolution,
+                SesionRepository,
+                "find_identity",
+                fail_session_storage,
             )
 
         response = client.post(
@@ -545,6 +551,16 @@ def test_security_control_failure_returns_503_and_never_executes_endpoint(
 
     assert response.status_code == 503
     assert response.json() == {"detail": "Servicio no disponible"}
-    assert "private" not in response.text
+    for restricted in (
+        "private",
+        "sql",
+        "traceback",
+        token,
+        COOKIE_NAME,
+        email,
+        "password",
+    ):
+        assert restricted.lower() not in response.text.lower()
     with factory() as session:
         assert session.scalar(select(func.count()).select_from(Vehiculo)) == 0
+        assert authorization_rows(session) == []
