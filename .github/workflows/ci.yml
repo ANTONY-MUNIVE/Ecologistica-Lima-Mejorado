@@ -48,7 +48,11 @@ jobs:
         run: python -m ruff format --check .
 
       - name: Run backend unit tests
-        run: python -m pytest tests/unit -q
+        run: >-
+          python -m pytest tests/unit -q
+          --cov=app
+          --cov-report=term-missing
+          --cov-fail-under=80
 
   backend-integration:
     name: Backend / Integration
@@ -137,7 +141,7 @@ jobs:
         run: npm run typecheck
 
       - name: Run frontend tests
-        run: npm test
+        run: npm run test:coverage
 
       - name: Build frontend
         run: npm run build
