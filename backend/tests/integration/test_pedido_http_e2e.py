@@ -17,6 +17,7 @@ from app.services.credenciales import CredentialService
 from app.services.pedidos import PedidoUnavailable
 
 pytestmark = pytest.mark.integration
+FRONTEND_ORIGIN = "http://127.0.0.1:5173"
 
 
 def create_user(factory, email, role):
@@ -175,6 +176,79 @@ def test_real_auth_rbac_client_errors_and_sanitized_storage(migration_database):
             unavailable = client.post("/pedidos", json=payload(client_id))
             assert unavailable.status_code == 503
             assert "private SQL" not in unavailable.text
+            assert count_orders(engine) == 1
+    finally:
+        clear_audit(factory)
+
+
+def test_credentialed_browser_login_and_order_creation(migration_database):
+    engine, config = migration_database
+    command.upgrade(config, "head")
+    factory = session_factory(engine)
+    client_id = create_client(factory)
+    create_user(factory, "operator-cors@example.test", "OPERADOR")
+    app = create_app(
+        Settings(
+            app_env="test",
+            database_url=config.attributes["database_url"],
+            cors_allowed_origins=[FRONTEND_ORIGIN],
+        )
+    )
+    try:
+        with TestClient(app) as client:
+            with Session(engine) as session:
+                audits_before = session.scalar(
+                    select(func.count()).select_from(Auditoria)
+                )
+            preflight = client.options(
+                "/pedidos",
+                headers={
+                    "Origin": FRONTEND_ORIGIN,
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "content-type",
+                },
+            )
+            assert preflight.status_code == 200
+            assert preflight.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
+            with Session(engine) as session:
+                assert (
+                    session.scalar(select(func.count()).select_from(Auditoria))
+                    == audits_before
+                )
+            assert count_orders(engine) == 0
+
+            unauthorized = client.post(
+                "/pedidos",
+                json=payload(client_id),
+                headers={"Origin": FRONTEND_ORIGIN},
+            )
+            assert unauthorized.status_code == 401
+            assert count_orders(engine) == 0
+
+            login_response = client.post(
+                "/login",
+                json={
+                    "email": "operator-cors@example.test",
+                    "password": "correct-password",
+                },
+                headers={"Origin": FRONTEND_ORIGIN},
+            )
+            assert login_response.status_code == 200
+            assert "HttpOnly" in login_response.headers["set-cookie"]
+            assert (
+                login_response.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
+            )
+            assert login_response.headers["access-control-allow-credentials"] == "true"
+            assert client.cookies.get("ecologistica_session") is not None
+
+            created = client.post(
+                "/pedidos",
+                json=payload(client_id),
+                headers={"Origin": FRONTEND_ORIGIN},
+            )
+            assert created.status_code == 201
+            assert created.headers["access-control-allow-origin"] == FRONTEND_ORIGIN
+            assert created.headers["access-control-allow-credentials"] == "true"
             assert count_orders(engine) == 1
     finally:
         clear_audit(factory)
