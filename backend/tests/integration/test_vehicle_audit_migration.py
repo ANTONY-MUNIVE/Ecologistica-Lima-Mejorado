@@ -13,12 +13,25 @@ pytestmark = pytest.mark.integration
 
 def test_0005_clean_downgrade_and_metadata(migration_database):
     engine, config = migration_database
-    command.upgrade(config, "head")
-    command.check(config)
+    command.upgrade(config, "0005_extend_vehicle_audit_events")
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
             "0005_extend_vehicle_audit_events"
         )
+        audit_constraint = connection.scalar(
+            text(
+                "SELECT pg_get_constraintdef(oid) FROM pg_constraint "
+                "WHERE conname = 'ck_auditoria_accion' "
+                "AND conrelid = 'auditoria'::regclass"
+            )
+        )
+        assert audit_constraint is not None
+        assert "VEHICULO_PARAMETROS_ACTUALIZADOS" in audit_constraint
+        assert "VEHICULO_DESACTIVADO" in audit_constraint
+    command.downgrade(config, "0004_create_vehiculo")
+    command.upgrade(config, "head")
+    command.check(config)
+    with engine.connect() as connection:
         context = MigrationContext.configure(
             connection,
             opts={
@@ -28,8 +41,6 @@ def test_0005_clean_downgrade_and_metadata(migration_database):
             },
         )
         assert compare_metadata(context, Base.metadata) == []
-    command.downgrade(config, "0004_create_vehiculo")
-    command.upgrade(config, "head")
 
 
 @pytest.mark.parametrize(
@@ -38,7 +49,7 @@ def test_0005_clean_downgrade_and_metadata(migration_database):
 )
 def test_0005_downgrade_rejects_and_preserves_vehicle_audit(migration_database, action):
     engine, config = migration_database
-    command.upgrade(config, "head")
+    command.upgrade(config, "0005_extend_vehicle_audit_events")
     with engine.begin() as connection:
         user_id = connection.scalar(
             text(
@@ -87,6 +98,14 @@ def test_0005_downgrade_rejects_and_preserves_vehicle_audit(migration_database, 
 
     # Explicit cleanup applies only to the disposable test database.
     with engine.begin() as connection:
-        connection.execute(text("DELETE FROM auditoria"))
+        result = connection.execute(
+            text(
+                "DELETE FROM auditoria WHERE usuario_id = :user_id "
+                "AND entidad = 'vehiculo' AND entidad_id = :vehicle_id "
+                "AND accion = :action"
+            ),
+            {"user_id": user_id, "vehicle_id": vehicle_id, "action": action},
+        )
+        assert result.rowcount == 1
     command.downgrade(config, "0004_create_vehiculo")
     command.upgrade(config, "head")
