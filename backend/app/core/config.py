@@ -1,8 +1,9 @@
 """Environment configuration; database credentials are never logged."""
 
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -20,6 +21,39 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     db_connect_timeout: int = Field(default=5, ge=1, le=30)
     session_ttl_minutes: int = Field(default=60, ge=1, le=1440)
+    cors_allowed_origins: list[str] = Field(default_factory=list)
+
+    @field_validator("cors_allowed_origins")
+    @classmethod
+    def validate_cors_allowed_origins(
+        cls, origins: list[str], info: ValidationInfo
+    ) -> list[str]:
+        normalized: list[str] = []
+        for origin in origins:
+            try:
+                parsed = urlsplit(origin)
+                hostname = parsed.hostname
+                parsed.port  # Validate the port even when it is not used below.
+            except ValueError:
+                raise ValueError("Invalid CORS origin") from None
+
+            exact_origin = f"{parsed.scheme}://{parsed.netloc}"
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not hostname
+                or parsed.username is not None
+                or parsed.password is not None
+                or "*" in origin
+                or any(character.isspace() for character in origin)
+                or origin not in {exact_origin, f"{exact_origin}/"}
+            ):
+                raise ValueError("Invalid CORS origin")
+            if info.data.get("app_env") == "production" and parsed.scheme != "https":
+                raise ValueError("Production CORS origins must use HTTPS")
+            if exact_origin in normalized:
+                raise ValueError("Duplicate CORS origin")
+            normalized.append(exact_origin)
+        return normalized
 
     @field_validator("database_url", mode="before")
     @classmethod

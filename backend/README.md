@@ -1,9 +1,9 @@
-# Backend EcoLogística Lima — ECL-27 / ECL-30 / ECL-31
+# Backend EcoLogística Lima
 
 Bootstrap FastAPI con SQLAlchemy síncrono y Psycopg 3. Incluye el modelo de
-credenciales Usuario, hashing Argon2id y autorización RBAC con auditoría persistente.
-No incluye login HTTP, sesiones, integración HTTP de autorización, Docker,
-Redis ni pipelines.
+credenciales Usuario, hashing Argon2id, login HTTP con sesión por cookie HttpOnly,
+autorización RBAC con auditoría persistente y registro de pedidos. No incluye
+Docker, Redis ni pipelines.
 
 ## Instalación (PowerShell)
 
@@ -36,10 +36,33 @@ se puede copiar a `.env` e introducir allí la configuración privada.
 | `DATABASE_URL` | Opcional para HTTP; obligatoria para DB/Alembic. Formato `postgresql+psycopg://USER:PASSWORD@HOST:5432/DATABASE`. |
 | `APP_ENV` | `development` (predeterminado), `test` o `production`. |
 | `DB_CONNECT_TIMEOUT` | Tiempo de conexión en segundos, entre 1 y 30; predeterminado 5. |
+| `CORS_ALLOWED_ORIGINS` | Array JSON de orígenes frontend permitidos, por ejemplo `["http://127.0.0.1:5173"]`. Predeterminado `[]`; en producción solo se aceptan orígenes HTTPS. |
 
 Codificar caracteres especiales de usuario/contraseña en la URL. No registrar
 credenciales ni incluirlas en comandos compartidos. Usar un usuario de aplicación
 con privilegios mínimos; las operaciones administrativas usan otro usuario.
+
+## Integración navegador/API — ECL-45
+
+El backend de desarrollo se inicia en `http://127.0.0.1:8000` con el comando de
+instalación anterior. Desde `frontend/`, iniciar Vite en el origen configurado:
+
+```bash
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+El ejemplo de `CORS_ALLOWED_ORIGINS` permite ese origen y habilita credenciales
+para `POST` JSON a `/login`, `/logout` y `/pedidos`. El frontend debe usar
+`credentials: "include"` al iniciar sesión y al consumir la API para recibir y
+enviar la cookie HttpOnly. Con `SameSite=Strict`, usar `127.0.0.1` en ambos
+procesos; mezclarlo con `localhost` impide compartir la cookie como mismo sitio.
+Los puertos diferentes siguen requiriendo CORS.
+
+Sin orígenes configurados, el backend sigue disponible para clientes HTTP pero
+no autoriza acceso CORS desde el navegador. En producción, establecer mediante
+entorno una lista explícita de orígenes HTTPS del frontend; no usar comodines.
+El despliegue debe conservar una relación de mismo sitio compatible con la
+cookie `SameSite=Strict`. CORS no reemplaza la autenticación ni RBAC.
 
 ## PostgreSQL 16 y PostGIS
 
