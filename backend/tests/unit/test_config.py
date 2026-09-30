@@ -25,11 +25,28 @@ def test_cors_origins_from_json_environment(monkeypatch):
 
 
 @pytest.mark.parametrize(
+    "origin,normalized",
+    [
+        ("http://127.0.0.1:5173", "http://127.0.0.1:5173"),
+        ("http://127.0.0.1:5173/", "http://127.0.0.1:5173"),
+        ("https://frontend.example.test", "https://frontend.example.test"),
+        ("https://frontend.example.test/", "https://frontend.example.test"),
+    ],
+)
+def test_canonical_cors_origins_are_accepted(origin, normalized):
+    assert Settings(cors_allowed_origins=[origin]).cors_allowed_origins == [normalized]
+
+
+@pytest.mark.parametrize(
     "origins",
     [
         ["http://127.0.0.1:5173", "http://127.0.0.1:5173/"],
         ["*"],
         ["https://*.example.test"],
+        ["https://example.test:"],
+        ["https://example.test\\other.test"],
+        ["https://example.test:invalid"],
+        [" https://frontend.example.test"],
         ["ftp://frontend.example.test"],
         ["https://user:password@frontend.example.test"],
         ["https://frontend.example.test/app"],
