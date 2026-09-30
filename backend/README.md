@@ -335,8 +335,8 @@ una base desechable cuyo nombre termine en `_test` y sea distinto del nombre de
 la base de desarrollo. No se usa `DATABASE_URL` como sustituto.
 
 El esquema public debe estar vacío: solo se admiten `spatial_ref_sys` de PostGIS
-y una tabla `alembic_version` vacía. Las pruebas crean/eliminan `usuario`, `auditoria`
-y `sesion`, y `vehiculo`; pueden dejar la tabla de control de Alembic vacía.
+y una tabla `alembic_version` vacía. Las pruebas crean/eliminan `usuario`, `auditoria`,
+`sesion`, `vehiculo`, `cliente` y `pedido`; pueden dejar la tabla de control de Alembic vacía.
 Requieren `TEST_DATABASE_URL`, sin fallback a `DATABASE_URL`, y aplican las
 validaciones de nombre `_test` y separación respecto de desarrollo. No ejecutarlas
 contra datos que se desee conservar ni ejecutar downgrades destructivos contra
@@ -371,6 +371,22 @@ sin borrar evidencia si existen eventos incompatibles con `0004`.
 inválida, la suite correspondiente falla explícitamente; nunca usa `DATABASE_URL`
 como fallback. La prueba de conectividad PostGIS existente usa `DATABASE_URL` y
 es de solo lectura.
+
+## Registro de pedidos — ECL-43
+
+`POST /pedidos` requiere sesión con `pedidos.crear` (Administrador u Operador) y
+devuelve `201` con el Pedido en estado `PENDIENTE`. Recibe `cliente_id`, dirección,
+peso y volumen positivos, ventana con timestamps que incluyan zona u offset,
+prioridad (`EXPRESS`, `ESTANDAR`, `ECONOMICO`) y tipo de producto libre hasta 20
+caracteres. La ubicación admite latitud y longitud WGS84 juntas, o una referencia
+textual no vacía de hasta 255 caracteres; también se pueden enviar ambas. El
+request no acepta `pedido_id` ni `estado`.
+
+La revisión `0006_create_cliente_pedido` crea la tabla documental `cliente` para
+la FK y `pedido.ubicacion GEOGRAPHY(POINT,4326)` en PostGIS. La API no crea la
+extensión PostGIS ni expone operaciones de Cliente. El CRUD y las preferencias
+de Cliente pertenecen a ECL-11. Las pruebas de migración y persistencia de Pedido
+usan exclusivamente la `TEST_DATABASE_URL` validada por el fixture existente.
 
 ## Calidad
 
