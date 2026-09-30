@@ -165,22 +165,59 @@ Transformar la línea base de requisitos en un **Product Backlog ágil, trazable
 
 **Como** Operador de despacho, **quiero** registrar pedidos con ubicación, peso, volumen, ventana horaria, prioridad y tipo de producto, **para** incorporarlos correctamente a la planificación de reparto.
 
+**Reglas funcionales aprobadas**
+
+- El cliente es obligatorio y debe existir; la dirección también es obligatoria.
+- La regla general de ubicación de RN-006 se satisface con **coordenadas válidas O un punto de referencia verificable**. Cuando se proporcionan coordenadas, representan latitud y longitud en WGS84 / SRID 4326; sus rangos técnicos son latitud de -90 a 90 y longitud de -180 a 180. Estos rangos no validan pertenencia a Lima Este.
+- El peso debe cumplir `peso_kg > 0` y el volumen `volumen_m3 > 0`.
+- La ventana debe cumplir `ventana_inicio < ventana_fin`. Ambos timestamps deben incluir zona u offset; no se fija aquí una política global de zona horaria.
+- La prioridad es obligatoria y admite `EXPRESS`, `ESTANDAR` o `ECONOMICO`.
+- El tipo de producto es obligatorio, texto no vacío de hasta 20 caracteres. No se establece un catálogo cerrado.
+- El estado inicial del pedido registrado es `PENDIENTE`.
+
+La regla general de ubicación no cambia para el escenario de dirección no estandarizada: ese escenario particular requiere dirección textual, coordenadas **y** punto de referencia.
+
 **Criterios de aceptación BDD**
 
 **Escenario: Pedido válido**
-- **Dado** un Operador autenticado.
-- **Cuando** registra un pedido con ubicación y ventana válidas.
-- **Entonces** el pedido queda pendiente de planificación.
+- **Dado** un Operador autenticado, un cliente existente y datos obligatorios válidos: ubicación suficiente, peso y volumen positivos, ventana válida, prioridad válida y tipo de producto no vacío.
+- **Cuando** registra el Pedido.
+- **Entonces** el registro es aceptado, el Pedido queda en estado `PENDIENTE` y puede ser seleccionado posteriormente para planificación.
+
+**Persistencia esperada:** se crea un único Pedido. El registro no crea una ruta, no dispara una optimización ni asigna automáticamente el Pedido a un vehículo o conductor.
 
 **Escenario: Dirección no estandarizada**
-- **Dado** una dirección de Lima Este no tiene nomenclatura estándar.
-- **Cuando** se registran coordenadas y un punto de referencia.
-- **Entonces** el pedido queda utilizable por el optimizador.
+- **Dado** una dirección textual no estandarizada de Lima Este, un cliente existente, un Operador autenticado, coordenadas, un punto de referencia y el resto de campos obligatorios válidos. San Juan de Lurigancho puede usarse como ejemplo representativo, no es la única zona permitida.
+- **Cuando** el Operador registra el Pedido.
+- **Entonces** se persiste conservando dirección, coordenadas y referencia; queda en estado `PENDIENTE` y disponible como entrada posterior del optimizador.
+
+En este escenario, **utilizable por el optimizador** significa que el Pedido fue persistido correctamente, está `PENDIENTE`, tiene ubicación suficiente, peso y volumen válidos, ventana válida, prioridad válida y tipo de producto, y puede seleccionarse posteriormente como entrada de planificación/optimización. No significa ejecutar la optimización, crear una ruta, asignar un vehículo ni validar pertenencia a un distrito.
 
 **Escenario: Ventana inválida**
-- **Dado** la hora final es anterior a la hora inicial.
-- **Cuando** se intenta guardar el pedido.
-- **Entonces** el sistema rechaza el registro e indica el dato a corregir.
+- **Dado** que `ventana_fin <= ventana_inicio`.
+- **Cuando** se intenta guardar el Pedido.
+- **Entonces** se rechaza el registro, se identifica `ventana_fin` o la regla temporal como dato a corregir y el Pedido no se persiste.
+
+El código HTTP, el schema Pydantic y el formato interno de excepciones se definirán en ECL-43.
+
+**Datos de prueba no normativos**
+
+Los valores concretos de esta tabla son ejemplos para automatizar los escenarios; no agregan límites ni reglas al dominio.
+
+| Dato | Ejemplo de prueba | Carácter |
+|---|---|---|
+| Operador | Usuario autenticado con rol `OPERADOR` | El rol es normativo; el usuario es de prueba. |
+| Cliente | UUID de un cliente previamente creado | La existencia es normativa; el UUID es de prueba. |
+| Dirección | `Av. Principal 123, Lima Este` | Ejemplo de prueba. |
+| Dirección no estandarizada | `Mz. A Lt. 5, Lima Este` | Ejemplo de prueba. |
+| Latitud / longitud | `-11.987654`, `-76.987654` | Ejemplo de prueba dentro de rangos técnicos. |
+| Referencia | `Frente al parque del sector` | Ejemplo de prueba. |
+| Peso / volumen | `12.50 kg`, `0.080 m3` | Ejemplos de prueba; solo es normativo que ambos sean positivos. |
+| Ventana válida | `2026-10-01T09:00:00-05:00` a `2026-10-01T11:00:00-05:00` | Ejemplo de prueba con offset; solo son normativos timestamps con zona/offset y el orden temporal. |
+| Ventana inválida | `2026-10-01T11:00:00-05:00` a `2026-10-01T09:00:00-05:00` | Ejemplo de prueba; la regla normativa es `ventana_inicio < ventana_fin`. |
+| Prioridad | `ESTANDAR` | Valor normativo. |
+| Tipo de producto | `PRODUCTO_PRUEBA` | Ejemplo de texto no vacío; no define catálogo. |
+| Estado | `PENDIENTE` | Estado inicial normativo. |
 
 ### US-005 — Gestionar preferencias de entrega de clientes
 
