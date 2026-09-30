@@ -97,7 +97,7 @@ def authorization_rows(session, event=None):
     return list(session.scalars(statement.order_by(Auditoria.creado_en)))
 
 
-def test_administrator_real_http_crud_cookie_and_allowed_audit(security_database):
+def test_us001_scenario_1_valid_access_and_login_audit(security_database):
     factory, database_url = security_database
     identity = create_user(factory, "admin-security@example.test", "ADMINISTRADOR")
     app = security_app(database_url)
@@ -153,6 +153,17 @@ def test_administrator_real_http_crud_cookie_and_allowed_audit(security_database
         )
         assert stored_session is not None
         assert stored_session.token_hash != token
+        successful_logins = list(
+            session.scalars(
+                select(Auditoria).where(Auditoria.accion == Evento.LOGIN_EXITOSO.value)
+            )
+        )
+        assert len(successful_logins) == 1
+        successful_login = successful_logins[0]
+        assert successful_login.usuario_id == identity.usuario_id
+        assert successful_login.entidad == "sesion"
+        assert successful_login.entidad_id == stored_session.sesion_id
+        assert successful_login.detalle == {"resultado": "EXITOSO"}
         stored_vehicle = session.get(Vehiculo, vehicle_id)
         assert stored_vehicle.estado == "INACTIVO"
 
@@ -247,11 +258,22 @@ def test_operator_denied_delete_preserves_active_vehicle(security_database):
         }
 
 
-def test_auditor_reads_but_mutations_preserve_vehicle(security_database):
+def test_us001_scenario_3_role_restriction_preserves_protected_data(
+    security_database,
+):
     factory, database_url = security_database
     identity = create_user(factory, "auditor-security@example.test", "AUDITOR")
     vehicle_id = seed_vehicle(factory, "AUD-001")
     app = security_app(database_url)
+
+    with factory() as session:
+        vehicle = session.get(Vehiculo, vehicle_id)
+        before = (
+            vehicle.vehiculo_id,
+            vehicle.placa,
+            vehicle.capacidad_kg,
+            vehicle.estado,
+        )
 
     with TestClient(app) as client:
         login(client, "auditor-security@example.test")
@@ -269,15 +291,35 @@ def test_auditor_reads_but_mutations_preserve_vehicle(security_database):
 
     with factory() as session:
         vehicle = session.get(Vehiculo, vehicle_id)
+        after = (
+            vehicle.vehiculo_id,
+            vehicle.placa,
+            vehicle.capacidad_kg,
+            vehicle.estado,
+        )
+        assert after == before
         assert vehicle.estado == "ACTIVO"
         assert vehicle.capacidad_kg == Decimal("1000.00")
         assert session.scalar(select(func.count()).select_from(Vehiculo)) == 1
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(Auditoria)
+                .where(
+                    Auditoria.entidad_id == vehicle_id,
+                    Auditoria.accion == Evento.VEHICULO_PARAMETROS_ACTUALIZADOS.value,
+                )
+            )
+            == 0
+        )
         denied = authorization_rows(session, Evento.DENEGADA)
-        assert {row.detalle["permiso"] for row in denied} == {
-            "vehiculos.crear",
-            "vehiculos.actualizar",
-            "vehiculos.desactivar",
-        }
+        assert Counter(row.detalle["permiso"] for row in denied) == Counter(
+            {
+                "vehiculos.crear": 1,
+                "vehiculos.actualizar": 1,
+                "vehiculos.desactivar": 1,
+            }
+        )
         assert all(row.usuario_id == identity.usuario_id for row in denied)
         assert all(row.detalle["motivo"] == "SIN_PERMISO" for row in denied)
 
@@ -413,7 +455,9 @@ def test_current_user_state_invalidates_existing_session_without_reactivation(
         assert authorization_rows(session) == []
 
 
-def test_real_login_denials_are_indistinguishable_and_sanitized(security_database):
+def test_us001_scenario_2_invalid_credentials_are_indistinguishable(
+    security_database,
+):
     factory, database_url = security_database
     create_user(factory, "wrong-password@example.test", "OPERADOR")
     inactive = create_user(factory, "inactive-login@example.test", "OPERADOR")
@@ -442,8 +486,7 @@ def test_real_login_denials_are_indistinguishable_and_sanitized(security_databas
     assert {response.status_code for response in responses} == {401}
     response_bodies = [response.json() for response in responses]
     assert len({json.dumps(body, sort_keys=True) for body in response_bodies}) == 1
-    assert set(response_bodies[0]) == {"detail"}
-    assert "Credenciales" in response_bodies[0]["detail"]
+    assert all(body == {"detail": "Credenciales inválidas"} for body in response_bodies)
     assert all("set-cookie" not in response.headers for response in responses)
     combined = "".join(response.text for response in responses).lower()
     for private in (
