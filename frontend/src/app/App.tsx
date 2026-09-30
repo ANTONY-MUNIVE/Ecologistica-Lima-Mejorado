@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router-dom'
 import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { OrderCreatePage } from '../pages/OrderCreatePage'
 
 export function App() {
   return (
@@ -10,11 +11,15 @@ export function App() {
           <Link className="brand" to="/">
             EcoLogística Lima
           </Link>
+          <Link className="nav-link" to="/pedidos/nuevo">
+            Registrar pedido
+          </Link>
         </nav>
       </header>
       <main id="contenido-principal" className="container main-content">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/pedidos/nuevo" element={<OrderCreatePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
