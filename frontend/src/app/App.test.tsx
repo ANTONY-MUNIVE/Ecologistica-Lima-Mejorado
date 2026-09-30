@@ -50,4 +50,26 @@ describe('App', () => {
       screen.getByRole('heading', { name: 'Rutas sostenibles para Lima' }),
     ).toBeInTheDocument()
   })
+
+  it('renderiza directamente el formulario de registro de pedidos', () => {
+    renderAt('/pedidos/nuevo')
+
+    expect(
+      screen.getByRole('heading', { name: 'Registrar pedido' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Registrar pedido' }),
+    ).toBeInTheDocument()
+  })
+
+  it('navega al formulario desde el enlace principal', async () => {
+    const user = userEvent.setup()
+    renderAt('/')
+
+    await user.click(screen.getByRole('link', { name: 'Registrar pedido' }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Registrar pedido' }),
+    ).toBeInTheDocument()
+  })
 })
