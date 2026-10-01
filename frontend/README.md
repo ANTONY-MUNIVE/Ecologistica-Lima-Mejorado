@@ -61,6 +61,51 @@ según rol. El enlace y la ruta `/pedidos/nuevo` se muestran visualmente solo a
 `ADMINISTRADOR` y `OPERADOR`. El RBAC del backend sigue siendo la autoridad para
 cada petición.
 
+## Vehículos — ECL-41
+
+La ruta `/vehiculos` reúne el listado y el registro de vehículos:
+
+| Rol | Acceso efectivo a esta vista |
+|---|---|
+| `ADMINISTRADOR`, `OPERADOR` | Listar y crear. |
+| `AUDITOR` | Solo listar; el formulario no se monta. |
+| `CONDUCTOR`, `ANALISTA` | Sin acceso a esta vista de flota general. |
+
+La navegación y la ruta comparten una sola regla visual. Sin identidad se redirige
+a `/login`; con rol no permitido se muestra acceso denegado sin solicitar el
+listado. El RBAC del backend sigue siendo la autoridad real de cada operación.
+Se conserva la limitación de ECL-37: tras recargar, la identidad en memoria se
+pierde y hay que iniciar sesión otra vez. No se usa almacenamiento del navegador
+ni se añade `/me`.
+
+El servicio utiliza `buildApiUrl('vehiculos')` y `credentials: 'include'`:
+
+- `GET /vehiculos`: espera `200` y un array directo; no envía body, `Content-Type`
+  ni otros headers adicionales. Es un GET simple y no requiere preflight.
+- `POST /vehiculos`: envía JSON con `Content-Type: application/json` y espera
+  `201`. Solo incluye placa, tipo, las dos capacidades, rendimiento, factor CO₂
+  y año de fabricación. El preflight utiliza POST y `content-type`.
+
+La configuración CORS actual es suficiente para esas dos operaciones con el
+origen documentado `http://127.0.0.1:5173` permitido. No añadir `Content-Type` al
+GET: provocaría un preflight GET que la configuración actual rechaza.
+
+Las capacidades, rendimiento y factor CO₂ se mantienen como **strings decimales**
+en el formulario, request y response. Se valida precisión y escala sin convertir
+a `Number`, admitiendo ceros finales como `1.2300`. Se usa punto decimal, sin
+separadores de miles ni exponentes en el formulario. La placa conserva el texto
+introducido; el backend la normaliza y la confirmación muestra la placa devuelta.
+
+El listado mantiene el orden recibido e incluye vehículos activos e inactivos.
+El botón **Actualizar listado** consulta nuevamente el API. Tras crear se limpia
+el formulario y se actualiza la tabla en la misma ruta. Si ese GET falla, se
+conserva la confirmación del registro y se permite reintentar solo la consulta.
+Las respuestas GET obsoletas se ignoran. Los errores se presentan con mensajes
+propios, sin exponer cuerpos ni detalles arbitrarios del backend.
+
+ECL-41 no incluye detalle, edición, desactivación, reactivación, filtros,
+paginación ni asignaciones.
+
 ## Desarrollo
 
 ```bash

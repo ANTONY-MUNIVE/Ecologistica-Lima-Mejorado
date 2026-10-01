@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../services/auth'
 import type { AuthRole } from '../services/auth'
+import { createVehicle, listVehicles } from '../services/vehicles'
+import type { VehicleResponse } from '../services/vehicles'
 import { App } from './App'
 
 vi.mock('../services/auth', async (importOriginal) => {
@@ -13,6 +15,19 @@ vi.mock('../services/auth', async (importOriginal) => {
 const loginMock = vi.mocked(login)
 const usuario_id = '123e4567-e89b-12d3-a456-426614174000'
 
+vi.mock('../services/vehicles', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/vehicles')>()
+  return { ...actual, listVehicles: vi.fn(), createVehicle: vi.fn() }
+})
+
+const listVehiclesMock = vi.mocked(listVehicles)
+const createVehicleMock = vi.mocked(createVehicle)
+const vehicle: VehicleResponse = {
+  vehiculo_id: '223e4567-e89b-12d3-a456-426614174000',
+  placa: 'ABC-123', tipo: 'CAMIONETA', capacidad_kg: '1000.00', capacidad_m3: '8.00',
+  rendimiento_km_l: '10.000', factor_co2_kg_km: '0.30000', anio_fabricacion: 2024, estado: 'ACTIVO',
+}
+
 function RouteControls() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -21,6 +36,7 @@ function RouteControls() {
       <span data-testid="path">{location.pathname}</span>
       <button type="button" onClick={() => { void navigate('/pedidos/nuevo') }}>Abrir ruta de pedido</button>
       <button type="button" onClick={() => { void navigate('/login') }}>Abrir ruta de login</button>
+      <button type="button" onClick={() => { void navigate('/vehiculos') }}>Abrir ruta de vehículos</button>
       <button type="button" onClick={() => { void navigate(-1) }}>Atrás</button>
     </aside>
   )
@@ -48,6 +64,8 @@ async function signIn(role: AuthRole) {
 describe('App', () => {
   beforeEach(() => {
     loginMock.mockReset()
+    listVehiclesMock.mockReset().mockResolvedValue([vehicle])
+    createVehicleMock.mockReset().mockResolvedValue(vehicle)
   })
 
   it('renderiza el inicio con landmarks y enlace de acceso anónimo', () => {
@@ -59,6 +77,7 @@ describe('App', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Aplicación iniciada correctamente')
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login')
     expect(screen.queryByRole('link', { name: 'Registrar pedido' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Vehículos' })).not.toBeInTheDocument()
   })
 
   it('abre /login desde el enlace anónimo', async () => {
@@ -136,14 +155,65 @@ describe('App', () => {
     expect(screen.queryByRole('heading', { name: 'Iniciar sesión' })).not.toBeInTheDocument()
   })
 
-  it('no recupera identidad al volver a montar App', async () => {
+  it.each(['/pedidos/nuevo', '/vehiculos'])('no recupera identidad al volver a montar App en %s', async (path) => {
     const first = renderAt('/login')
     await signIn('OPERADOR')
     expect(screen.getByRole('link', { name: 'Registrar pedido' })).toBeInTheDocument()
     first.unmount()
-    renderAt('/pedidos/nuevo')
+    renderAt(path)
     expect(screen.getByTestId('path')).toHaveTextContent('/login')
     expect(screen.queryByRole('link', { name: 'Registrar pedido' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(listVehiclesMock).not.toHaveBeenCalled()
+  })
+
+  it('redirige /vehiculos a login sin identidad y no consulta vehículos', () => {
+    renderAt('/vehiculos')
+    expect(screen.getByTestId('path')).toHaveTextContent('/login')
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(listVehiclesMock).not.toHaveBeenCalled()
+    expect(createVehicleMock).not.toHaveBeenCalled()
+  })
+
+  it.each<AuthRole>(['ADMINISTRADOR', 'OPERADOR'])('permite a %s listar y crear conservando /vehiculos', async (role) => {
+    renderAt('/login')
+    const user = await signIn(role)
+    expect(screen.getByRole('link', { name: 'Vehículos' })).toHaveAttribute('href', '/vehiculos')
+    await user.click(screen.getByRole('link', { name: 'Vehículos' }))
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(listVehiclesMock).toHaveBeenCalledTimes(1)
+    for (const [label, value] of Object.entries({
+      Placa: ' abc-123 ', Tipo: 'CAMIONETA', 'Capacidad (kg)': '1000.00', 'Capacidad (m³)': '8.00',
+      'Rendimiento (km/L)': '10.000', 'Factor CO₂ (kg/km)': '0.30000', 'Año de fabricación': '2024',
+    })) {
+      fireEvent.change(screen.getByLabelText(label), { target: { value } })
+    }
+    await user.click(screen.getByRole('button', { name: 'Registrar vehículo' }))
+    expect(await screen.findByText('Vehículo registrado: ABC-123.')).toBeInTheDocument()
+    expect(createVehicleMock).toHaveBeenCalledTimes(1)
+    expect(listVehiclesMock).toHaveBeenCalledTimes(2)
+    expect(screen.getByTestId('path').textContent).toBe('/vehiculos')
+  })
+
+  it('Auditor ve enlace y listado, sin montar el formulario', async () => {
+    renderAt('/login')
+    const user = await signIn('AUDITOR')
+    await user.click(screen.getByRole('link', { name: 'Vehículos' }))
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+    expect(screen.queryByRole('form')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Registrar vehículo' })).not.toBeInTheDocument()
+    expect(createVehicleMock).not.toHaveBeenCalled()
+  })
+
+  it.each<AuthRole>(['CONDUCTOR', 'ANALISTA'])('oculta vehículos y deniega acceso directo a %s sin solicitudes', async (role) => {
+    renderAt('/login')
+    const user = await signIn(role)
+    expect(screen.queryByRole('link', { name: 'Vehículos' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Abrir ruta de vehículos' }))
+    expect(screen.getByRole('heading', { name: 'Acceso denegado' })).toBeInTheDocument()
+    expect(screen.queryByRole('form')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Actualizar listado' })).not.toBeInTheDocument()
+    expect(listVehiclesMock).not.toHaveBeenCalled()
+    expect(createVehicleMock).not.toHaveBeenCalled()
   })
 })
