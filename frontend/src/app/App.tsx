@@ -4,10 +4,16 @@ import { HomePage } from '../pages/HomePage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderCreatePage } from '../pages/OrderCreatePage'
+import { VehiclesPage } from '../pages/VehiclesPage'
 import type { AuthRole, LoginResponse } from '../services/auth'
 
 function canCreateOrders(role: AuthRole): boolean {
   return role === 'ADMINISTRADOR' || role === 'OPERADOR'
+}
+
+function getVehicleAccess(role: AuthRole | undefined) {
+  const canCreate = role === 'ADMINISTRADOR' || role === 'OPERADOR'
+  return { canList: canCreate || role === 'AUDITOR', canCreate }
 }
 
 function AccessDenied() {
@@ -23,6 +29,7 @@ export function App() {
   const [identity, setIdentity] = useState<LoginResponse | null>(null)
   const navigate = useNavigate()
   const createOrdersAllowed = identity !== null && canCreateOrders(identity.rol)
+  const vehicleAccess = getVehicleAccess(identity?.rol)
 
   function handleLoginSuccess(loggedInIdentity: LoginResponse) {
     setIdentity(loggedInIdentity)
@@ -43,6 +50,9 @@ export function App() {
             {createOrdersAllowed ? (
               <Link className="nav-link" to="/pedidos/nuevo">Registrar pedido</Link>
             ) : null}
+            {vehicleAccess.canList ? (
+              <Link className="nav-link" to="/vehiculos">Vehículos</Link>
+            ) : null}
           </div>
         </nav>
       </header>
@@ -57,6 +67,12 @@ export function App() {
             path="/pedidos/nuevo"
             element={identity === null ? <Navigate to="/login" replace /> : (
               createOrdersAllowed ? <OrderCreatePage /> : <AccessDenied />
+            )}
+          />
+          <Route
+            path="/vehiculos"
+            element={identity === null ? <Navigate to="/login" replace /> : (
+              vehicleAccess.canList ? <VehiclesPage canCreate={vehicleAccess.canCreate} /> : <AccessDenied />
             )}
           />
           <Route path="*" element={<NotFoundPage />} />

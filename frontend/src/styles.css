@@ -184,7 +184,8 @@ h1 {
   line-height: 1.6;
 }
 
-.order-form {
+.order-form,
+.vehicle-form {
   display: grid;
   gap: 1.25rem;
   border: 1px solid #cedbd5;
@@ -312,6 +313,98 @@ h1 {
   margin: 0;
   padding-block: 1.5rem;
   font-size: 0.9rem;
+}
+
+.vehicles-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.vehicles-page h1 {
+  margin-bottom: 1.5rem;
+  font-size: clamp(2rem, 6vw, 3.25rem);
+}
+
+.vehicle-list,
+.vehicle-registration {
+  min-width: 0;
+  margin-top: 2rem;
+}
+
+.vehicle-registration {
+  max-width: 48rem;
+}
+
+.vehicle-list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.vehicle-list-heading h2 {
+  margin: 0;
+}
+
+.vehicle-loading,
+.vehicle-empty {
+  border: 1px solid #cedbd5;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #275744;
+  background: #ffffff;
+}
+
+.vehicle-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #cedbd5;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.vehicle-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.vehicle-table caption {
+  padding: 1rem;
+  text-align: left;
+  color: #3f554c;
+}
+
+.vehicle-table th,
+.vehicle-table td {
+  border-top: 1px solid #cedbd5;
+  padding: 0.8rem;
+  vertical-align: top;
+}
+
+.vehicle-table th {
+  background: #eaf4ef;
+}
+
+.vehicle-table td {
+  white-space: nowrap;
+}
+
+.vehicle-state {
+  display: inline-block;
+  border: 1px solid #789488;
+  border-radius: 0.3rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.vehicle-table-scroll:focus-visible,
+.vehicles-page [role="alert"]:focus-visible {
+  outline: 3px solid #125b3d;
+  outline-offset: 3px;
 }
 
 @media (max-width: 30rem) {
