@@ -51,6 +51,19 @@ a:focus-visible {
   gap: 1rem;
 }
 
+.nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.identity-role {
+  color: #275744;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .brand {
   color: #125b3d;
   font-size: 1.15rem;
@@ -126,13 +139,43 @@ h1 {
   background: #147a4e;
 }
 
-.order-page {
+.order-page,
+.login-page {
   width: min(100%, 48rem);
   margin-inline: auto;
 }
 
-.order-page h1 {
+.order-page h1,
+.login-page h1,
+.access-denied h1 {
   font-size: clamp(2rem, 6vw, 3.25rem);
+}
+
+.login-page {
+  max-width: 30rem;
+}
+
+.login-form {
+  gap: 1rem;
+}
+
+.login-loading {
+  margin: 0;
+  color: #275744;
+  font-weight: 650;
+}
+
+.access-denied {
+  max-width: 36rem;
+}
+
+.access-denied p {
+  border: 1px solid #d8a1a1;
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+  color: #711919;
+  background: #fff0f0;
+  line-height: 1.5;
 }
 
 .form-intro {
@@ -289,6 +332,10 @@ h1 {
     flex-direction: column;
     justify-content: center;
     padding-block: 0.75rem;
+  }
+
+  .nav-actions {
+    width: 100%;
   }
 
   .form-grid {

@@ -1,9 +1,34 @@
-import { Link, Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { HomePage } from '../pages/HomePage'
+import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderCreatePage } from '../pages/OrderCreatePage'
+import type { AuthRole, LoginResponse } from '../services/auth'
+
+function canCreateOrders(role: AuthRole): boolean {
+  return role === 'ADMINISTRADOR' || role === 'OPERADOR'
+}
+
+function AccessDenied() {
+  return (
+    <section className="access-denied" aria-labelledby="access-denied-title">
+      <h1 id="access-denied-title">Acceso denegado</h1>
+      <p role="alert">No tienes permisos para acceder a esta función.</p>
+    </section>
+  )
+}
 
 export function App() {
+  const [identity, setIdentity] = useState<LoginResponse | null>(null)
+  const navigate = useNavigate()
+  const createOrdersAllowed = identity !== null && canCreateOrders(identity.rol)
+
+  function handleLoginSuccess(loggedInIdentity: LoginResponse) {
+    setIdentity(loggedInIdentity)
+    void navigate('/', { replace: true })
+  }
+
   return (
     <div className="app-shell">
       <header className="site-header">
@@ -11,15 +36,29 @@ export function App() {
           <Link className="brand" to="/">
             EcoLogística Lima
           </Link>
-          <Link className="nav-link" to="/pedidos/nuevo">
-            Registrar pedido
-          </Link>
+          <div className="nav-actions">
+            {identity ? <span className="identity-role">Rol: {identity.rol}</span> : (
+              <Link className="nav-link" to="/login">Iniciar sesión</Link>
+            )}
+            {createOrdersAllowed ? (
+              <Link className="nav-link" to="/pedidos/nuevo">Registrar pedido</Link>
+            ) : null}
+          </div>
         </nav>
       </header>
       <main id="contenido-principal" className="container main-content">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/pedidos/nuevo" element={<OrderCreatePage />} />
+          <Route
+            path="/login"
+            element={identity ? <Navigate to="/" replace /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
+          />
+          <Route
+            path="/pedidos/nuevo"
+            element={identity === null ? <Navigate to="/login" replace /> : (
+              createOrdersAllowed ? <OrderCreatePage /> : <AccessDenied />
+            )}
+          />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

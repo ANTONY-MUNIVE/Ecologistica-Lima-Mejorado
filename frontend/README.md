@@ -46,6 +46,21 @@ HttpOnly. No mezclar `localhost` con `127.0.0.1`: la sesión usa `SameSite=Stric
 y ambos procesos deben conservar una relación de mismo sitio. La sesión de un
 Operador o Administrador debe existir antes de usar el formulario de pedidos.
 
+## Acceso y roles
+
+La ruta `/login` envía `POST /login` con correo y contraseña mediante
+`credentials: "include"`. El backend crea la cookie de sesión HttpOnly y responde
+con `usuario_id` y uno de los roles `ADMINISTRADOR`, `OPERADOR`, `CONDUCTOR`,
+`ANALISTA` o `AUDITOR`. El frontend conserva esa identidad únicamente en memoria
+React. No guarda credenciales ni la identidad en almacenamiento del navegador.
+
+Tras una recarga, la identidad en React vuelve a ser desconocida aunque la cookie
+del backend pudiera seguir vigente. No existe un endpoint `/me` para recuperar el
+rol, por lo que la interfaz solicita iniciar sesión de nuevo para mostrar acciones
+según rol. El enlace y la ruta `/pedidos/nuevo` se muestran visualmente solo a
+`ADMINISTRADOR` y `OPERADOR`. El RBAC del backend sigue siendo la autoridad para
+cada petición.
+
 ## Desarrollo
 
 ```bash
