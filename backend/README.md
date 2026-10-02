@@ -2,10 +2,15 @@
 
 Bootstrap FastAPI con SQLAlchemy síncrono y Psycopg 3. Incluye el modelo de
 credenciales Usuario, hashing Argon2id, login HTTP con sesión por cookie HttpOnly,
-autorización RBAC con auditoría persistente y registro de pedidos. No incluye
-Docker, Redis ni pipelines.
+autorización RBAC con auditoría persistente y registro de pedidos. El arranque
+local con Docker Compose está documentado en el [README principal](../README.md#arranque-local-con-docker-compose--ecl-29). No incluye Redis ni worker.
 
 ## Instalación (PowerShell)
+
+Esta instalación directa sigue disponible como alternativa a Docker Compose.
+Dentro de la imagen Docker, `/app` es el directorio de trabajo y contiene el
+paquete `app` y Alembic. Se instalan `requirements.lock` y no hace falta
+instalar el proyecto como paquete editable para importar esos módulos.
 
 Desde esta carpeta, comprobar primero `python --version`. El paquete declara
 Python >=3.10; las versiones fijadas se validan con Python 3.12.10 en Windows.
@@ -105,6 +110,12 @@ La comparación de metadata excluye `spatial_ref_sys`, administrada por PostGIS.
 .venv/Scripts/python -m alembic current
 .venv/Scripts/python -m alembic check
 ```
+
+Con `postgis/postgis:16-3.5` en Docker Compose, `alembic check` puede proponer
+eliminar tablas e índices instalados por las extensiones espaciales. Para
+confirmar revisiones aplicadas en ese entorno, comparar `alembic current` con
+`alembic heads`; no ejecutar las eliminaciones sugeridas. La verificación de
+deriva mediante autogeneración requiere un ajuste posterior fuera de ECL-29.
 
 PostgreSQL 16 dispone de `gen_random_uuid()`; comprobar su disponibilidad antes
 del upgrade. La migración no instala extensiones ni crea usuarios iniciales.
