@@ -162,3 +162,10 @@ de nuevo los servicios. Las instrucciones de arranque sin Docker siguen en
 > Las evidencias visuales de Jira se encuentran disponibles en
 > `docs/02 Planificación/evidencias-jira/` y están integradas en
 > [`02 Artefactos Jira V_1_0_0.md`](<docs/02 Planificación/02 Artefactos Jira V_1_0_0.md>).
+
+## Fase 03: Implementación — entregables del Sprint 1
+
+- [01 Informe de estado del proyecto V_1_0_0](<docs/03 Implementación/01 Informe de estado del proyecto V_1_0_0.md>)
+- [02 Registro de Impedimentos V_1_0_0](<docs/03 Implementación/02 Registro de Impedimentos V_1_0_0.md>)
+- [03 Revisión del Sprint V_1_0_0](<docs/03 Implementación/03 Revisión del Sprint V_1_0_0.md>)
+- [04 Retrospectiva del Sprint V_1_0_0](<docs/03 Implementación/04 Retrospectiva del Sprint V_1_0_0.md>)
