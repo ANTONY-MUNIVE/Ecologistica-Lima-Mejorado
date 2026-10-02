@@ -14,6 +14,119 @@ Repositorio de documentación y desarrollo del proyecto académico EcoLogística
 | Antony Munive Ríos | Desarrollador backend y optimización |
 | José Samuel Delgadillo Pantoja | Desarrollador frontend y aseguramiento de calidad |
 
+## Arranque local con Docker Compose — ECL-29
+
+Este entorno local levanta PostgreSQL 16/PostGIS 3.5, la API FastAPI y el
+frontend Vite. No incluye Redis, worker de optimización, datos de ejemplo ni
+servicios de producción. Requiere Docker con el daemon activo y Docker Compose
+v2. Los puertos 8000 y 5173 del host deben estar libres. Los servicios web se
+publican únicamente en `127.0.0.1`; PostgreSQL no publica un puerto al host.
+Las imágenes base fijadas son `postgis/postgis:16-3.5`,
+`python:3.12.10-slim-bookworm` y `node:22.18.0-bookworm-slim`. El backend usa
+`requirements.lock` y el frontend `package-lock.json` mediante `npm ci`.
+Sus digests de manifiesto están fijados en `compose.yaml` y los dos Dockerfile;
+al actualizarlos se debe comprobar de nuevo la compatibilidad y el build.
+
+Desde la raíz del repositorio, verificar antes de iniciar que no existe otro
+proyecto Compose con nombre `ecologistica-lima-ecl29` y que el volumen
+`ecologistica-lima-ecl29_postgis_data`, si existe, pertenece a este proyecto.
+No reutilizar un volumen de origen desconocido ni detener otros contenedores:
+
+```powershell
+docker info --format '{{.ServerVersion}}'
+docker compose ls --all
+docker volume ls --filter name=ecologistica-lima-ecl29_postgis_data
+netstat -ano -p tcp | Select-String -Pattern ':8000\s',':5173\s'
+```
+
+Crear `.env` **solo si todavía no existe** y completar sus valores privados.
+`.env` de la raíz está ignorado por Git; es distinto de `backend/.env` y no se
+copia a ninguna imagen. Nunca publicar el archivo ni la salida de una
+configuración Compose expandida.
+
+```powershell
+if (-not (Test-Path -LiteralPath .env)) {
+    Copy-Item -LiteralPath .env.example -Destination .env
+}
+```
+
+`POSTGRES_DB`, `POSTGRES_USER` y `POSTGRES_PASSWORD` inicializan la base solo
+cuando el volumen está vacío. `DATABASE_URL` debe usar esos mismos valores y el
+host **interno** `db:5432`, por ejemplo con el formato
+`postgresql+psycopg://USUARIO:CONTRASENA_CODIFICADA@db:5432/BASE`.
+Codificar en porcentaje los caracteres reservados del usuario o contraseña
+(por ejemplo, `@` como `%40`, `:` como `%3A`, `/` como `%2F` y `%` como `%25`).
+Si un valor del archivo `.env` contiene `$`, usar comillas simples para evitar
+la interpolación de Compose. No ejecutar `docker compose config` sin `--quiet`
+al trabajar con credenciales privadas.
+Un cambio de credenciales en `.env` no modifica una base ya inicializada.
+
+La siguiente secuencia valida la configuración sin imprimirla, construye las
+imágenes, inicia primero la base, comprueba PostgreSQL/PostGIS y ejecuta las
+migraciones **explícitamente**. Comparar `alembic current` y `alembic heads`:
+ambos deben indicar la misma revisión para confirmar que no quedan revisiones
+Alembic por aplicar.
+
+```powershell
+docker compose --env-file .env config --quiet
+docker compose --env-file .env build
+docker compose --env-file .env up -d --wait db
+docker compose --env-file .env run --rm --no-deps backend python -m app.db.check
+docker compose --env-file .env run --rm --no-deps backend python -m alembic upgrade head
+docker compose --env-file .env run --rm --no-deps backend python -m alembic current
+docker compose --env-file .env run --rm --no-deps backend python -m alembic heads
+docker compose --env-file .env up -d --wait backend frontend
+docker compose --env-file .env ps
+```
+
+En la imagen PostGIS 16-3.5, `alembic check` detectó propuestas de eliminación
+de tablas e índices instalados con las extensiones espaciales (36 tablas y 28
+índices en la validación de ECL-29), pese a que `current` y `heads` coinciden.
+No aplicar esas eliminaciones. La comprobación de deriva de modelos mediante
+autogeneración queda pendiente de excluir correctamente esos objetos en un
+trabajo de migraciones separado; no forma parte del arranque de ECL-29.
+
+Abrir `http://127.0.0.1:5173/` para la aplicación,
+`http://127.0.0.1:8000/health` para salud del proceso y
+`http://127.0.0.1:8000/docs` para OpenAPI. Vite sirve desde el contenedor,
+pero el navegador llama al API mediante `http://127.0.0.1:8000`; el nombre
+`backend` solo se resuelve dentro de la red Compose. El CORS existente permite
+el origen exacto `http://127.0.0.1:5173`. Mantener `127.0.0.1` en ambos lados
+para la cookie de sesión `SameSite=Strict`.
+
+Los healthchecks de API y frontend verifican que sus procesos responden. El
+healthcheck de base usa `pg_isready`; por sí solo no acredita PostGIS ni el
+esquema. Para ello sirven `app.db.check`, la comparación `alembic current` /
+`alembic heads` y una inspección de las tablas de aplicación.
+Si falla un paso, consultar `docker compose --env-file .env ps` y los logs del
+servicio afectado, revisándolos antes de compartirlos. No seguir con el siguiente
+paso hasta corregir el error. No se crean usuarios automáticamente; el login
+requiere una cuenta de prueba autorizada ya existente.
+
+Para verificar que el **esquema** persiste, apagar, volver a iniciar solo la
+base, comparar las revisiones y comprobar las tablas. Esa comprobación no
+acredita persistencia de datos de negocio:
+
+```powershell
+docker compose --env-file .env down
+docker compose --env-file .env up -d --wait db
+docker compose --env-file .env run --rm --no-deps backend python -m app.db.check
+docker compose --env-file .env run --rm --no-deps backend python -m alembic current
+docker compose --env-file .env run --rm --no-deps backend python -m alembic heads
+docker compose --env-file .env run --rm --no-deps backend python -c "from sqlalchemy import inspect; from app.core.config import Settings; from app.db.session import build_engine; engine=build_engine(Settings()); names=set(inspect(engine).get_table_names()); expected={'usuario','auditoria','sesion','vehiculo','cliente','pedido','alembic_version'}; print('application_schema_present=',expected <= names); engine.dispose()"
+```
+
+Apagar conservando los datos con:
+
+```powershell
+docker compose --env-file .env down
+```
+
+No usar `down -v` ni borrar volúmenes. No hay bind mounts de código: después de
+cambiar código hay que repetir `docker compose --env-file .env build` y levantar
+de nuevo los servicios. Las instrucciones de arranque sin Docker siguen en
+[`backend/README.md`](backend/README.md) y [`frontend/README.md`](frontend/README.md).
+
 ## Fase 01: Inicio y línea base
 
 - [Selección del enfoque del proyecto V_1_0_0](<docs/01 Inicio/01. Selección del enfoque del proyecto V_1_0_0.md>)  
