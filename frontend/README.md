@@ -14,6 +14,12 @@ Si se usa NVM, ejecutar `nvm use` dentro de `frontend/`.
 
 ## Instalación reproducible
 
+El arranque local con Docker Compose se documenta en el
+[README principal](../README.md#arranque-local-con-docker-compose--ecl-29).
+Esta instalación directa sigue disponible. La imagen local instala con
+`npm ci` y ejecuta Vite; no monta el código del host, por lo que los cambios
+requieren reconstruir la imagen.
+
 ```bash
 cd frontend
 npm ci
