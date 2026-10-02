@@ -150,14 +150,14 @@ de nuevo los servicios. Las instrucciones de arranque sin Docker siguen en
 - [03 Registro de riesgos V_1_0_0](<docs/02 Planificación/03 Registro de riesgos V_1_0_0.md>)
 - [04 Presupuesto del proyecto V_1_0_0](<docs/02 Planificación/04 Presupuesto del proyecto V_1_0_0.md>)
 
-### Estado de Jira
+### Estado de Jira — fotografía de planificación inicial
 
 - Proyecto: `ECL` — Company-managed Scrum.
 - Board: `ECL board`.
 - Release: `v1.0.0-MVP`.
 - Product Backlog ejecutable: 20 elementos / 115 Story Points.
 - Sprint 1: `Sprint 1 - Base Operativa`, 28 Story Points, 18 subtareas técnicas.
-- Sprint activo: 11/09/2026 – 25/09/2026.
+- Periodo planificado original: 11/09/2026 – 25/09/2026.
 
 > Las evidencias visuales de Jira se encuentran disponibles en
 > `docs/02 Planificación/evidencias-jira/` y están integradas en
@@ -169,3 +169,7 @@ de nuevo los servicios. Las instrucciones de arranque sin Docker siguen en
 - [02 Registro de Impedimentos V_1_0_0](<docs/03 Implementación/02 Registro de Impedimentos V_1_0_0.md>)
 - [03 Revisión del Sprint V_1_0_0](<docs/03 Implementación/03 Revisión del Sprint V_1_0_0.md>)
 - [04 Retrospectiva del Sprint V_1_0_0](<docs/03 Implementación/04 Retrospectiva del Sprint V_1_0_0.md>)
+
+### Actualización operativa — 02/10/2026
+
+Sprint 1 sigue activo, con fin reprogramado en Jira al **02/10/2026 16:00 America/Lima**. La consulta actual registra **28/28 SP** de padres y **19/19 subtareas** finalizadas, como medidas separadas. ECL-29 y los entregables preparatorios están integrados mediante PR #20 y #21. Esto no acredita demo, retrospectiva ni aceptación. Véase la [adenda de Artefactos Jira V_1_0_1](<docs/02 Planificación/02 Artefactos Jira V_1_0_1.md>) para fuentes, límites y pendientes.

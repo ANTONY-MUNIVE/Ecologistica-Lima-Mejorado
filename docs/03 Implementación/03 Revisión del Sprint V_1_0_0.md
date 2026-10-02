@@ -58,3 +58,7 @@ El Sprint 1 (ID 4, board 3) comprometió seis elementos principales y 28 SP. Al 
 | 1.0.0 | 01/10/2026 | Revisión preparatoria: HU, enablers, guion y pendientes diferenciados. |
 
 [← Volver al README principal](../../README.md)
+
+## Actualización posterior al corte — 02/10/2026
+
+El contenido V_1_0_0 anterior conserva el corte histórico del 01/10. La [adenda operativa V_1_0_1](<../02 Planificación/02 Artefactos Jira V_1_0_1.md>) registra la reprogramación ya aplicada en Jira, los merges de PR #20 y #21, la validación independiente de Giancarlo y el nuevo estado de padres/subtareas. Los pendientes sobre aprobación e integración de esos PR corresponden al corte anterior y están superados; demo, feedback, retrospectiva y aceptación siguen sin evidencia de realización.
