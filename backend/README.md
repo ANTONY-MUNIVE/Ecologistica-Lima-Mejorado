@@ -53,6 +53,23 @@ frontend puede mostrarlo como sugerencia durante el registro; el operador
 establece explícitamente la ventana. Esta decisión de presentación está
 pendiente de ECL-51/ECL-54.
 
+## Observabilidad local — ECL-60 / ST-034
+
+`GET /health` comprueba que el proceso responde. `GET /health/ready` realiza
+`SELECT 1` sobre la base de aplicación y devuelve `200` si responde o `503`
+si no está disponible; no revela la URL ni el error del controlador. Los dos
+sondeos deben considerarse por separado en la monitorización operativa.
+
+`GET /internal/metrics` requiere una sesión con permiso general de consulta
+de auditoría (Administrador o Auditor). Devuelve contadores por método y
+plantilla de ruta, errores HTTP 5xx, suma y máximo de latencias, solicitudes
+activas y máximo observado, y agregados de ejecuciones SQL de los motores de
+negocio y auditoría. No guarda parámetros SQL, cookies, rutas con IDs ni
+datos personales. Los contadores son **locales al proceso** y se reinician
+al arrancar; en varios workers cada uno tiene su propia vista. La suma y el
+máximo no constituyen un P95 ni un SLA. Para ECL-61 faltan la captura externa
+por intervalo, pruebas de carga y resultados sobre PostgreSQL/PostGIS aislado.
+
 ## Instalación (PowerShell)
 
 Esta instalación directa sigue disponible como alternativa a Docker Compose.

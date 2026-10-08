@@ -5,15 +5,19 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import Engine
+from starlette.requests import Request
 
 from app.api.auth import router as auth_router
 from app.api.conductores import router as driver_router
 from app.api.health import router as health_router
+from app.api.metrics import router as metrics_router
 from app.api.pedidos import router as order_router
 from app.api.preferencias import router as preference_router
 from app.api.vehiculos import router as vehicle_router
 from app.core.config import Settings
 from app.db.session import build_audit_engine, build_engine, session_factory
+from app.observability.metrics import MetricsRegistry, instrument_engine
 from app.services.auditoria import AuditoriaService
 from app.services.autenticacion import AutenticacionService
 from app.services.autorizacion import AutorizacionService
@@ -21,6 +25,7 @@ from app.services.autorizacion import AutorizacionService
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings if settings is not None else Settings()
+    registry = MetricsRegistry()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -29,6 +34,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             engine = build_engine(config) if config.database_url else None
             audit_engine = build_audit_engine(config) if config.database_url else None
+            if isinstance(engine, Engine):
+                instrument_engine(engine, registry, "business")
+            if isinstance(audit_engine, Engine):
+                instrument_engine(audit_engine, registry, "audit")
             business_factory = session_factory(engine) if engine else None
             audit_factory = session_factory(audit_engine) if audit_engine else None
             app.state.engine = engine
@@ -36,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.session_factory = business_factory
             app.state.audit_session_factory = audit_factory
             app.state.settings = config
+            app.state.metrics = registry
             audit_service = AuditoriaService(audit_factory) if audit_factory else None
             app.state.authentication_service = (
                 AutenticacionService(
@@ -57,6 +67,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 engine.dispose()
 
     app = FastAPI(title="EcoLogística Lima API", version="0.1.0", lifespan=lifespan)
+
+    @app.middleware("http")
+    async def observe_http(request: Request, call_next):
+        started = registry.request_started()
+        response_status = 500
+        try:
+            response = await call_next(request)
+            response_status = response.status_code
+            return response
+        finally:
+            route = getattr(request.scope.get("route"), "path", "unmatched")
+            registry.request_finished(started, request.method, route, response_status)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_allowed_origins,
@@ -70,4 +93,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(vehicle_router)
     app.include_router(driver_router)
     app.include_router(preference_router)
+    app.include_router(metrics_router)
     return app
