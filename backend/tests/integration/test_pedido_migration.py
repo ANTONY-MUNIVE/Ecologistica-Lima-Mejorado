@@ -80,6 +80,9 @@ def test_client_order_revision_and_metadata(migration_database):
             "0006_create_cliente_pedido"
         )
 
+    # Preserve assertions for revision 0006 above; compare current ORM metadata
+    # only after applying subsequent migrations as required by Alembic check.
+    command.upgrade(config, "head")
     command.check(config)
     with engine.connect() as connection:
         context = MigrationContext.configure(
