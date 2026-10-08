@@ -5,6 +5,37 @@ credenciales Usuario, hashing Argon2id, login HTTP con sesión por cookie HttpOn
 autorización RBAC con auditoría persistente y registro de pedidos. El arranque
 local con Docker Compose está documentado en el [README principal](../README.md#arranque-local-con-docker-compose--ecl-29). No incluye Redis ni worker.
 
+## Conductores — ECL-46 / ECL-48
+
+La revisión Alembic `0007_create_conductor` añade la tabla `conductor` sobre
+`0006_create_cliente_pedido`. Conserva DNI único, relación opcional y única con
+`usuario`, vigencia de licencia, disponibilidad y los campos de contacto y punto
+de partida. Debe aplicarse con `python -m alembic upgrade head` en una base de
+desarrollo aislada; no modificar migraciones anteriores.
+
+La API expone `POST /conductores`, `GET /conductores`,
+`GET /conductores/{conductor_id}`, `PATCH /conductores/{conductor_id}` y
+`GET /conductores/me`. Las respuestas detalladas contienen DNI y teléfono:
+solo Administrador y Operador pueden listar, registrar y actualizar; Conductor
+puede consultar únicamente su propio registro asociado a su cuenta mediante
+`/me`. Auditor y Analista no reciben datos personales por estos endpoints.
+Todas las operaciones requieren sesión y se autorizan mediante el RBAC existente.
+
+El cuerpo de creación requiere nombre, DNI de ocho dígitos, licencia, fecha de
+vigencia no vencida, años de experiencia no negativos, teléfono, inicio y fin
+de disponibilidad con zona horaria y punto de partida. `usuario_id` es opcional;
+si se proporciona, debe corresponder a un usuario Conductor activo. La
+actualización acepta campos parciales no nulos y vuelve a validar el registro
+completo. Se devuelven `409` para DNI o usuario duplicado, `422` para datos
+inválidos y `503` ante fallos de almacenamiento sin exponer detalles internos.
+La vigencia se evalúa con la fecha local de Lima. La API no asigna rutas ni
+expone itinerarios o reportes offline.
+
+El formato exacto de licencia, teléfono y punto de partida, así como la regla
+de vinculación obligatoria de cuentas, requieren confirmación de los BDD de
+ECL-47. Los límites aquí aplicados son decisiones técnicas propuestas para
+proteger la integridad de datos, no reglas de negocio aprobadas.
+
 ## Instalación (PowerShell)
 
 Esta instalación directa sigue disponible como alternativa a Docker Compose.
