@@ -1,5 +1,20 @@
 # Frontend de EcoLogística Lima
 
+## Conductores — ECL-49 / ST-023
+
+Tras iniciar sesión como Administrador u Operador, abrir `/conductores`. La
+pantalla consulta registros reales mediante `GET /conductores` y permite crear
+o editar con `POST` y `PATCH`. Incluye carga, lista vacía, reintento, mensajes
+de error, confirmación, validación local y foco en el primer campo inválido.
+El backend conserva la autoridad de permisos y validaciones; Auditor, Analista
+y Conductor no ven este listado con DNI y teléfono. El formulario permite
+asociar opcionalmente el UUID de una cuenta de rol Conductor activa.
+
+Para una demostración se necesitan usuarios y conductores sintéticos en una
+base de desarrollo aislada. La pantalla no incluye registros de ejemplo ni
+simula persistencia. La fecha de licencia y disponibilidad se envían al API;
+la validación final de licencia vigente ocurre en el servidor.
+
 Base técnica React + TypeScript construida con Vite. Incluye navegación mínima,
 configuración externa de la URL del API, validaciones automáticas y estilos CSS
 responsive.
