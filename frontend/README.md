@@ -112,6 +112,31 @@ propios, sin exponer cuerpos ni detalles arbitrarios del backend.
 ECL-41 no incluye detalle, edición, desactivación, reactivación, filtros,
 paginación ni asignaciones.
 
+## Itinerario móvil del conductor — ST-030
+
+La ruta `/conductor/itinerario` y el enlace **Mi itinerario** están disponibles
+únicamente para una identidad autenticada con rol `CONDUCTOR`. Sin identidad
+se solicita iniciar sesión; los demás roles reciben acceso denegado. Tras
+recargar se requiere iniciar sesión de nuevo, como en las otras vistas.
+
+Este prototipo muestra tres paradas ficticias, resumen por estado, filtros y
+detalle de la parada seleccionada. Al filtrar se mantiene la numeración original
+del itinerario y se muestra el detalle de una parada visible. Los controles se
+pueden recorrer con Tab y las paradas se seleccionan con Enter o espacio.
+El diseño pasa a una columna en móvil y contempla un ancho de 360 px.
+
+Los datos están identificados como demostración: no se consulta una API de rutas,
+no se modifican entregas reales y no se incluye GPS, persistencia ni sincronización
+offline. La integración real debe aplicar autorización en el backend por conductor
+y asignación. El diseño ST-029, la aceptación visual a 360 px y la validación del
+equipo siguen siendo requisitos de revisión; este prototipo no acredita por sí
+solo todos los criterios de EN-004.
+
+Para probar el acceso integrado se necesita el backend y una cuenta de prueba
+autorizada con rol `CONDUCTOR`. Revisar escritorio y 360 px, filtros, selección,
+teclado y denegación a otros roles. Las pruebas automatizadas usan respuestas
+simuladas de autenticación y no acreditan un inicio de sesión contra el backend.
+
 ## Desarrollo
 
 ```bash
