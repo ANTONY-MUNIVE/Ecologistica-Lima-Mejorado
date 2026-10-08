@@ -414,12 +414,12 @@ h1 {
 .drivers-page h1 { font-size: clamp(2rem, 6vw, 3.25rem); }
 .driver-form-section { max-width: 55rem; margin-top: 2rem; }
 .driver-list { display: grid; gap: 1rem; padding: 0; list-style: none; }
-.driver-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 1rem; align-items: center; border: 1px solid #cedbd5; border-radius: .6rem; padding: 1rem; background: #fff; }
-.driver-card div { display: grid; gap: .3rem; min-width: 0; overflow-wrap: anywhere; }
+.drivers-page .driver-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 1rem; align-items: center; border: 1px solid #cedbd5; border-radius: .6rem; padding: 1rem; background: #fff; }
+.drivers-page .driver-card div { display: grid; gap: .3rem; min-width: 0; overflow-wrap: anywhere; }
 .driver-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 .secondary-button { min-height: 2.8rem; border: 1px solid #125b3d; border-radius: .4rem; padding: .7rem 1rem; color: #125b3d; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .secondary-button:focus-visible { outline: 3px solid #f2a900; outline-offset: 2px; }
-@media (max-width: 42rem) { .driver-card { grid-template-columns: 1fr; } }
+@media (max-width: 42rem) { .drivers-page .driver-card { grid-template-columns: 1fr; } }
 .preferences-page { width: min(100%, 48rem); margin-inline: auto; }
 .preferences-page h1 { font-size: clamp(2rem, 6vw, 3.25rem); }
 .preference-edit-form { margin-top: 1.5rem; }
