@@ -6,6 +6,7 @@ import { DriversPage } from '../pages/DriversPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderCreatePage } from '../pages/OrderCreatePage'
+import { PreferencesPage } from '../pages/PreferencesPage'
 import { VehiclesPage } from '../pages/VehiclesPage'
 import type { AuthRole, LoginResponse } from '../services/auth'
 
@@ -56,6 +57,7 @@ export function App() {
               <Link className="nav-link" to="/vehiculos">Vehículos</Link>
             ) : null}
             {createOrdersAllowed ? <Link className="nav-link" to="/conductores">Conductores</Link> : null}
+            {createOrdersAllowed ? <Link className="nav-link" to="/clientes/preferencias">Preferencias</Link> : null}
             {identity?.rol === 'CONDUCTOR' ? (
               <Link className="nav-link" to="/conductor/itinerario">Mi itinerario</Link>
             ) : null}
@@ -83,6 +85,9 @@ export function App() {
           />
           <Route path="/conductores" element={identity === null ? <Navigate to="/login" replace /> : (
             createOrdersAllowed ? <DriversPage /> : <AccessDenied />
+          )} />
+          <Route path="/clientes/preferencias" element={identity === null ? <Navigate to="/login" replace /> : (
+            createOrdersAllowed ? <PreferencesPage /> : <AccessDenied />
           )} />
           <Route
             path="/conductor/itinerario"

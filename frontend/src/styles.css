@@ -213,7 +213,8 @@ h1 {
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   width: 100%;
   min-height: 2.8rem;
   border: 1px solid #789488;
@@ -225,12 +226,14 @@ h1 {
 }
 
 .form-field input[aria-invalid="true"],
-.form-field select[aria-invalid="true"] {
+.form-field select[aria-invalid="true"],
+.form-field textarea[aria-invalid="true"] {
   border-color: #a52a2a;
 }
 
 .form-field input:focus-visible,
 .form-field select:focus-visible,
+.form-field textarea:focus-visible,
 .submit-button:focus-visible,
 .nav-link:focus-visible {
   outline: 3px solid #f2a900;
@@ -417,6 +420,11 @@ h1 {
 .secondary-button { min-height: 2.8rem; border: 1px solid #125b3d; border-radius: .4rem; padding: .7rem 1rem; color: #125b3d; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 .secondary-button:focus-visible { outline: 3px solid #f2a900; outline-offset: 2px; }
 @media (max-width: 42rem) { .driver-card { grid-template-columns: 1fr; } }
+.preferences-page { width: min(100%, 48rem); margin-inline: auto; }
+.preferences-page h1 { font-size: clamp(2rem, 6vw, 3.25rem); }
+.preference-edit-form { margin-top: 1.5rem; }
+.order-preferences, .preference-hint { display: grid; justify-items: start; gap: .5rem; }
+.preference-hint { width: 100%; border: 1px solid #a9caba; border-radius: .5rem; padding: 1rem; background: #eaf4ef; }
 
 @media (max-width: 30rem) {
   .container {

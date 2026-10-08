@@ -7,6 +7,8 @@ import {
   OrderServiceError,
   Priority,
 } from '../services/orders'
+import { getPreferences, PreferenceServiceError } from '../services/preferences'
+import type { PreferenceRecord } from '../services/preferences'
 
 type FormField = keyof OrderCreatePayload
 type FieldErrors = Partial<Record<FormField, string>>
@@ -172,15 +174,48 @@ export function OrderCreatePage() {
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [globalError, setGlobalError] = useState('')
   const [createdOrder, setCreatedOrder] = useState<OrderCreateResponse | null>(null)
+  const [preference, setPreference] = useState<PreferenceRecord | null>(null)
+  const [preferenceStatus, setPreferenceStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [preferenceError, setPreferenceError] = useState('')
+  const preferenceRequest = useRef(0)
   const submittingRef = useRef(false)
 
   function updateValue(field: keyof OrderFormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
+    if (field === 'cliente_id') {
+      preferenceRequest.current += 1
+      setPreference(null)
+      setPreferenceStatus('idle')
+      setPreferenceError('')
+    }
     if (status !== 'submitting') {
       setStatus('idle')
       setGlobalError('')
       setCreatedOrder(null)
+    }
+  }
+
+  async function loadPreference() {
+    const id = values.cliente_id.trim()
+    if (!UUID_PATTERN.test(id)) {
+      setErrors((current) => ({ ...current, cliente_id: 'Ingresa un UUID de cliente válido.' }))
+      return
+    }
+    const current = ++preferenceRequest.current
+    setPreferenceStatus('loading')
+    setPreferenceError('')
+    try {
+      const loaded = await getPreferences(id)
+      if (current === preferenceRequest.current) {
+        setPreference(loaded)
+        setPreferenceStatus('idle')
+      }
+    } catch (error) {
+      if (current === preferenceRequest.current) {
+        setPreferenceStatus('error')
+        setPreferenceError(error instanceof PreferenceServiceError ? error.message : 'No se pudieron consultar las preferencias.')
+      }
     }
   }
 
@@ -253,6 +288,23 @@ export function OrderCreatePage() {
         <Field id="cliente_id" label="ID del cliente (UUID)" error={errors.cliente_id}>
           <input id="cliente_id" name="cliente_id" type="text" autoComplete="off" required value={values.cliente_id} onChange={(event) => updateValue('cliente_id', event.target.value)} aria-invalid={Boolean(errors.cliente_id)} aria-describedby={describedBy('cliente_id')} />
         </Field>
+        <div className="order-preferences">
+          <button className="secondary-button" type="button" disabled={preferenceStatus === 'loading'} onClick={() => { void loadPreference() }}>
+            {preferenceStatus === 'loading' ? 'Consultando…' : 'Consultar preferencias del cliente'}
+          </button>
+          {preferenceStatus === 'loading' ? <p role="status">Cargando preferencias…</p> : null}
+          {preferenceStatus === 'error' ? <p role="alert" className="field-error">{preferenceError}</p> : null}
+          {preference ? (
+            <div className="preference-hint" role="status">
+              <strong>Preferencias registradas para este cliente</strong>
+              <span>Horario: {preference.horario_preferido || 'sin preferencia'}</span>
+              <span>Referencia: {preference.referencia || 'sin preferencia'}</span>
+              <span>Acceso: {preference.restriccion_acceso || 'sin restricciones registradas'}</span>
+              {preference.referencia ? <button className="secondary-button" type="button" onClick={() => updateValue('referencia', preference.referencia ?? '')}>Usar referencia</button> : null}
+              <small>El horario es informativo; confirma manualmente la ventana del pedido.</small>
+            </div>
+          ) : null}
+        </div>
 
         <Field id="direccion" label="Dirección" error={errors.direccion}>
           <input id="direccion" name="direccion" type="text" maxLength={255} required value={values.direccion} onChange={(event) => updateValue('direccion', event.target.value)} aria-invalid={Boolean(errors.direccion)} aria-describedby={describedBy('direccion')} />

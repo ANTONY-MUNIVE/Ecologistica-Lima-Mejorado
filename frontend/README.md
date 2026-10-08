@@ -1,5 +1,9 @@
 # Frontend de EcoLogística Lima
 
+Base técnica React + TypeScript construida con Vite. Incluye navegación mínima,
+configuración externa de la URL del API, validaciones automáticas y estilos CSS
+responsive.
+
 ## Conductores — ECL-49 / ST-023
 
 Tras iniciar sesión como Administrador u Operador, abrir `/conductores`. La
@@ -15,9 +19,18 @@ base de desarrollo aislada. La pantalla no incluye registros de ejemplo ni
 simula persistencia. La fecha de licencia y disponibilidad se envían al API;
 la validación final de licencia vigente ocurre en el servidor.
 
-Base técnica React + TypeScript construida con Vite. Incluye navegación mínima,
-configuración externa de la URL del API, validaciones automáticas y estilos CSS
-responsive.
+## Preferencias de entrega — ECL-53 / ST-027
+
+Administrador y Operador pueden abrir `/clientes/preferencias`, ingresar el UUID
+de un cliente existente, consultar sus preferencias y actualizar horario,
+referencia y restricción de acceso. Un campo vacío se envía como `null` para
+eliminar esa preferencia. La pantalla informa carga, errores y confirmación.
+
+En `/pedidos/nuevo`, el botón «Consultar preferencias del cliente» muestra las
+preferencias del UUID ingresado. «Usar referencia» copia únicamente ese dato
+al pedido. El horario se presenta como texto orientativo y el operador define
+manualmente la ventana horaria hasta que ECL-51/ECL-54 acuerden un formato y
+su validación. No se simula persistencia.
 
 ## Requisitos
 
