@@ -16,15 +16,20 @@ describe('driver HTTP service', () => {
   })
 
   it('envía credenciales para leer, crear y actualizar', async () => {
+    const { conductor_id, ...payload } = row
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify([row]), { status: 200 }))
     expect(await listDrivers()).toEqual([row])
     expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({ method: 'GET', credentials: 'include' }))
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(row), { status: 201 }))
-    expect(await createDriver(row)).toEqual(row)
+    expect(await createDriver(payload)).toEqual(row)
     expect(fetchMock.mock.calls[1][1]).toEqual(expect.objectContaining({ method: 'POST', credentials: 'include' }))
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(row), { status: 200 }))
-    expect(await updateDriver(row.conductor_id, row)).toEqual(row)
+    expect(await updateDriver(conductor_id, payload)).toEqual(row)
     expect(fetchMock.mock.calls[2][1]).toEqual(expect.objectContaining({ method: 'PATCH', credentials: 'include' }))
+    const changes = JSON.parse(fetchMock.mock.calls[2][1]?.body as string)
+    expect(changes).not.toHaveProperty('usuario_id')
+    expect(changes).not.toHaveProperty('conductor_id')
+    expect(changes.nombre).toBe(row.nombre)
   })
 
   it('no muestra detalles del servidor y rechaza respuestas incompletas', async () => {

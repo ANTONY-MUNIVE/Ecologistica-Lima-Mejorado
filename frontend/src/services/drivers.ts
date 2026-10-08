@@ -53,7 +53,7 @@ function parseDriver(value: unknown): DriverRecord {
   return value as unknown as DriverRecord
 }
 
-async function requestDriver(path: string, method: 'GET' | 'POST' | 'PATCH', payload?: DriverPayload): Promise<unknown> {
+async function requestDriver(path: string, method: 'GET' | 'POST' | 'PATCH', payload?: Partial<DriverPayload>): Promise<unknown> {
   let response: Response
   try {
     response = await fetch(buildApiUrl(path), {
@@ -90,5 +90,8 @@ export async function createDriver(payload: DriverPayload): Promise<DriverRecord
 }
 
 export async function updateDriver(id: string, payload: DriverPayload): Promise<DriverRecord> {
-  return parseDriver(await requestDriver(`conductores/${encodeURIComponent(id)}`, 'PATCH', payload))
+  // A missing account preserves the existing association; PATCH rejects nulls.
+  const changes: Partial<DriverPayload> = { ...payload }
+  if (changes.usuario_id === null) delete changes.usuario_id
+  return parseDriver(await requestDriver(`conductores/${encodeURIComponent(id)}`, 'PATCH', changes))
 }
