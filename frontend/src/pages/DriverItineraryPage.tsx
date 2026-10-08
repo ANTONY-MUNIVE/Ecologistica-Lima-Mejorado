@@ -1,98 +1,89 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { DEMO_ITINERARY } from '../data/demoDriverItinerary'
+import { DELIVERY_LABEL, getNextStop, getStopAlerts } from '../domain/driverItinerary'
+import type { DeliveryState, DemoItinerary, DriverAlert, DriverStop } from '../domain/driverItinerary'
 import './DriverItineraryPage.css'
 
-type DeliveryState = 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO'
-interface Stop {
-  id: string
-  order: string
-  client: string
-  address: string
-  time: string
-  state: DeliveryState
-  note: string
+function OperationalAlerts({ alerts }: { alerts: readonly DriverAlert[] }) {
+  return <section className="driver-alerts" aria-label="Alertas operativas de demostración">
+    {alerts.length === 0 ? <p>No hay alertas operativas en este ejemplo.</p> : alerts.map((alert) => (
+      <div className="driver-alert" key={alert.id}>
+        <p className="driver-alert-title">{alert.title}</p><strong>{alert.description}</strong>
+        <p>{alert.instruction}</p><small>Alerta de demostración · Sin información de tráfico real</small>
+      </div>
+    ))}
+  </section>
 }
 
-// Datos únicamente ilustrativos: reemplazar con un endpoint autenticado cuando exista.
-const DEMO_STOPS: readonly Stop[] = [
-  { id: 'uno', order: 'PED-DEMO-01', client: 'Cliente de ejemplo A', address: 'Dirección de demostración 1, Lima', time: '08:30–09:00', state: 'PENDIENTE', note: 'Confirmar la recepción con el destinatario.' },
-  { id: 'dos', order: 'PED-DEMO-02', client: 'Cliente de ejemplo B', address: 'Dirección de demostración 2, Lima', time: '09:15–09:45', state: 'EN_RUTA', note: 'Verificar el acceso antes de estacionar.' },
-  { id: 'tres', order: 'PED-DEMO-03', client: 'Cliente de ejemplo C', address: 'Dirección de demostración 3, Lima', time: '10:00–10:30', state: 'ENTREGADO', note: 'Información ficticia para evaluar el diseño.' },
-]
-
-const STATE_LABEL: Record<DeliveryState, string> = {
-  PENDIENTE: 'Pendiente', EN_RUTA: 'En ruta', ENTREGADO: 'Entregado',
+function StopCard({ stop, next = false }: { stop: DriverStop; next?: boolean }) {
+  return <span className={`driver-card driver-card-${stop.state.toLowerCase()}${next ? ' driver-card-next' : ''}`}>
+    <span className="driver-card-state">{next ? 'Siguiente' : DELIVERY_LABEL[stop.state]} · {String(stop.sequence).padStart(2, '0')}</span>
+    <strong>{stop.client}</strong><span>{stop.address}</span><small>{stop.window} · {stop.load}</small>
+  </span>
 }
 
-export function DriverItineraryPage() {
-  const [selectedId, setSelectedId] = useState<string>('uno')
+export function DriverItineraryPage({ itinerary = DEMO_ITINERARY }: { itinerary?: DemoItinerary | null }) {
+  const [selected, setSelected] = useState<DriverStop | null>(null)
   const [filter, setFilter] = useState<'TODAS' | DeliveryState>('TODAS')
-  const filtered = DEMO_STOPS.filter((stop) => filter === 'TODAS' || stop.state === filter)
-  // La muestra fija contiene una parada de cada estado, por lo que nunca queda vacía.
-  const selected = filtered.find((stop) => stop.id === selectedId) ?? filtered[0]
+  const [showEmpty, setShowEmpty] = useState(false)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const current = showEmpty ? null : itinerary
+  const next = getNextStop(current?.stops ?? [])
+  const visible = (current?.stops ?? []).filter((stop) => filter === 'TODAS' || stop.state === filter)
+  const detail = current !== null && selected !== null
+  useEffect(() => { heading.current?.focus() }, [selected, showEmpty])
 
-  return (
-    <section className="driver-page" aria-labelledby="driver-title">
-      <div className="driver-hero">
-        <div>
-          <p className="driver-eyebrow">Panel del conductor · Vista móvil</p>
-          <h1 id="driver-title">Mi itinerario</h1>
-          <p>Consulta las paradas y revisa los detalles de cada entrega.</p>
-        </div>
-        <div className="driver-hero-stat" aria-label={`${DEMO_STOPS.length} paradas de demostración`}>
-          <strong>{DEMO_STOPS.length}</strong><span>paradas</span>
-        </div>
+  return <section className="driver-page" aria-labelledby="driver-title">
+    <div className="driver-demo-warning" role="note">
+      <strong>Datos de demostración · Vista de demostración.</strong>
+      <span>Ruta, pedidos, horarios, direcciones y alertas ficticios. No se consultan itinerarios reales.</span>
+    </div>
+    <p className="driver-eyebrow">EcoLogística Lima</p>
+    <h1 id="driver-title" ref={heading} tabIndex={-1}>{detail ? 'Detalle de parada' : 'Mi itinerario'}</h1>
+    <p className="driver-route-label">{current ? `Ruta ${current.id} · ${current.stops.length} paradas · Ejemplo ficticio` : 'Estado de demostración · Sin asignación'}</p>
+    {current === null ? <>
+      <div className="driver-empty driver-panel"><p className="driver-card-state">Sin asignación</p>
+        <h2>Aún no tienes un itinerario</h2><p>Cuando se te asigne una ruta, verás aquí las paradas y las alertas operativas.</p>
+        <strong>No hay paradas pendientes en este ejemplo.</strong>
       </div>
-
-      <div className="driver-demo-warning" role="note">
-        <strong>Vista de demostración.</strong> Los pedidos, horarios y direcciones son ficticios. No hay conexión todavía con el backend ni se actualizan entregas reales.
-      </div>
-
-      <div className="driver-summary" aria-label="Resumen del itinerario de demostración">
-        <div><strong>{DEMO_STOPS.filter((item) => item.state === 'PENDIENTE').length}</strong><span>Pendientes</span></div>
-        <div><strong>{DEMO_STOPS.filter((item) => item.state === 'EN_RUTA').length}</strong><span>En ruta</span></div>
-        <div><strong>{DEMO_STOPS.filter((item) => item.state === 'ENTREGADO').length}</strong><span>Entregadas</span></div>
-      </div>
-
-      <div className="driver-content">
-        <section aria-labelledby="driver-list-title">
-          <div className="driver-section-heading"><h2 id="driver-list-title">Paradas asignadas (demo)</h2></div>
-          <label className="driver-filter-label" htmlFor="driver-filter">Filtrar por estado</label>
-          <select id="driver-filter" className="driver-filter" value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)}>
-            <option value="TODAS">Todas las paradas</option>
-            <option value="PENDIENTE">Pendientes</option>
-            <option value="EN_RUTA">En ruta</option>
-            <option value="ENTREGADO">Entregadas</option>
-          </select>
-          <ol className="driver-stops">
-            {filtered.map((stop) => (
-              <li key={stop.id}>
-                <button
-                  type="button"
-                  className={`driver-stop${selected.id === stop.id ? ' driver-stop-selected' : ''}`}
-                  aria-pressed={selected.id === stop.id}
-                  onClick={() => setSelectedId(stop.id)}
-                >
-                  <span className="driver-stop-number" aria-hidden="true">{DEMO_STOPS.indexOf(stop) + 1}</span>
-                  <span className="driver-stop-info"><strong>{stop.client}</strong><span>{stop.address}</span><small>{stop.time}</small></span>
-                  <span className={`driver-status driver-status-${stop.state.toLowerCase()}`}>{STATE_LABEL[stop.state]}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        </section>
-        <section className="driver-detail" aria-labelledby="driver-detail-title">
-          <p className="driver-eyebrow">Detalle de la parada</p>
-          <h2 id="driver-detail-title">{selected.client}</h2>
-          <dl>
-              <div><dt>Pedido de prueba</dt><dd>{selected.order}</dd></div>
-              <div><dt>Dirección</dt><dd>{selected.address}</dd></div>
-              <div><dt>Ventana de entrega</dt><dd>{selected.time}</dd></div>
-              <div><dt>Estado</dt><dd>{STATE_LABEL[selected.state]}</dd></div>
-              <div><dt>Indicaciones</dt><dd>{selected.note}</dd></div>
-          </dl>
-          <p className="driver-detail-notice">La navegación GPS, los cambios de estado y la sincronización se integrarán cuando estén disponibles los servicios de rutas y entregas.</p>
-        </section>
-      </div>
-    </section>
-  )
+      <p>Si esperabas una ruta, solicita la asignación a tu coordinador.</p>
+      {showEmpty ? <button className="driver-primary" type="button" onClick={() => { setShowEmpty(false); setFilter('TODAS') }}>Cargar ejemplo de itinerario</button> : null}
+    </> : detail ? <>
+      <StopCard stop={selected} next={selected.id === next?.id} />
+      <section className="driver-panel" aria-labelledby="driver-info-title">
+        <h2 id="driver-info-title">Información de entrega</h2><dl>
+          <div><dt>Ventana de atención</dt><dd>{selected.window}</dd></div>
+          <div><dt>Carga de demostración</dt><dd>{selected.load}</dd></div>
+          <div><dt>Pedido de prueba</dt><dd>{selected.order}</dd></div>
+          <div><dt>Recepción</dt><dd>{selected.reception}</dd></div>
+          <div><dt>Estado</dt><dd>{DELIVERY_LABEL[selected.state]}</dd></div>
+        </dl>
+      </section>
+      <OperationalAlerts alerts={getStopAlerts(current.alerts, selected.id)} />
+      <section className="driver-panel" aria-labelledby="driver-instructions-title">
+        <h2 id="driver-instructions-title">Antes de llegar</h2>
+        <ol>{selected.instructions.map((instruction) => <li key={instruction}>{instruction}</li>)}</ol>
+        <small>Estas indicaciones son ficticias.</small>
+      </section>
+      <button className="driver-primary" type="button" onClick={() => setSelected(null)}>Volver al itinerario</button>
+    </> : <>
+      <OperationalAlerts alerts={current.alerts} />
+      <section aria-labelledby="driver-next-title"><h2 id="driver-next-title">Siguiente parada</h2>
+        {next ? <><StopCard stop={next} next /><button className="driver-primary" type="button" onClick={() => setSelected(next)}>Ver detalle de parada</button></> : <p>No hay paradas pendientes en este ejemplo.</p>}
+      </section>
+      <section aria-labelledby="driver-list-title"><h2 id="driver-list-title">Recorrido de hoy</h2>
+        <label className="driver-filter-label" htmlFor="driver-filter">Filtrar por estado</label>
+        <select id="driver-filter" className="driver-filter" value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)}>
+          <option value="TODAS">Todas las paradas</option><option value="PENDIENTE">Pendientes</option>
+          <option value="EN_RUTA">En ruta</option><option value="ENTREGADO">Completadas</option><option value="DEMORADO">Con demora prevista</option>
+        </select>
+        <ol className="driver-stops">{visible.map((stop) => <li key={stop.id}>
+          <button className="driver-stop" type="button" onClick={() => setSelected(stop)} aria-label={`Ver parada ${stop.sequence}: ${stop.client}`}><StopCard stop={stop} next={stop.id === next?.id} /></button>
+        </li>)}</ol>
+        {visible.length === 0 ? <p role="status">No hay paradas con este estado.</p> : null}
+      </section>
+      <button className="driver-secondary" type="button" onClick={() => { setSelected(null); setShowEmpty(true) }}>Ver ejemplo sin asignación</button>
+    </>}
+    <p className="driver-footnote">Datos de demostración. No se consulta una ruta real ni se modifican entregas. Sin GPS o sincronización offline.</p>
+  </section>
 }

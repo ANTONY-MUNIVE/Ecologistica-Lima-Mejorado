@@ -1,106 +1,115 @@
-# Validación local de ST-030
+# Validación local — ECL-56 / ST-030
 
 Fecha: 08/10/2026, America/Lima.
-Rama: `feature/st-030-itinerario-movil`.
-
 Trazabilidad: **ECL-56 / ST-030 → ECL-22 / EN-004**.
-Diseño previo requerido: **ECL-55 / ST-029**.
-Commit del prototipo: `ea114f9`.
-Pull Request: [#24](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/24).
+Rama existente del [PR #24](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/24):
+`feature/st-030-itinerario-movil`. Se conserva para actualizar el mismo PR;
+la documentación y los nuevos mensajes de commit utilizan el ticket ECL-56.
 
-El PR representa un avance parcial pendiente de aprobación humana. Su eventual
-integración no implica finalizar ECL-56/ST-030 ni ECL-22/EN-004.
+## Diseño de referencia
 
-## Incremento
+ECL-55/ST-029, aprobado según la confirmación de Giancarlo en esta conversación.
+Esta referencia no sustituye el registro de aprobación del equipo en Jira/Figma.
 
-Prototipo del itinerario móvil con tres paradas ficticias, resumen por estado,
-filtros, selección y detalle. La numeración conserva el orden original al filtrar
-y el detalle corresponde a una parada visible. La ruta `/conductor/itinerario`
-y su enlace están protegidos visualmente para el rol `CONDUCTOR`.
+- [Mi itinerario](https://www.figma.com/design/VhDMfCVBzDfpJWWhbOCbWh/?node-id=5-125).
+- [Detalle de parada](https://www.figma.com/design/VhDMfCVBzDfpJWWhbOCbWh/?node-id=5-163).
+- [Sin itinerario](https://www.figma.com/design/VhDMfCVBzDfpJWWhbOCbWh/?node-id=5-194).
+- [Guía visual](https://www.figma.com/design/VhDMfCVBzDfpJWWhbOCbWh/?node-id=5-21).
 
-Se conserva la autenticación existente. Los itinerarios aún no consumen una API
-de rutas y no incluyen GPS, cambios de estado, persistencia o sincronización offline.
-No se implementa ST-023, gestión de conductores.
+## Incremento corregido
 
-## Resultados ejecutados
+- Cuatro paradas ficticias con estados, numeración original y filtro.
+- Siguiente parada explícita: primera no completada por secuencia, independiente
+  del filtro y de la selección de detalle.
+- Alertas operativas ficticias en el itinerario y alertas aplicables en el detalle.
+- Información de entrega, indicaciones, regreso al itinerario y estado sin asignación.
+- Identificación visible de datos de demostración en todas las vistas.
+- Tipografía, colores, tarjetas, botones de 48 px y foco según la guía visual.
+- Navegación por teclado con foco en el título tras cambiar de vista.
+- Acceso existente limitado a CONDUCTOR; no se cambia la autenticación.
+
+La selección de una tarjeta ya no se presenta como sustituto de la siguiente
+parada; el aviso de demostración y las indicaciones tampoco sustituyen las alertas.
+
+## Resultados técnicos
 
 | Comprobación | Resultado |
 |---|---|
-| `npm ci --no-audit --no-fund` | Correcto, sin modificar el lockfile. |
-| `npm run typecheck` | Correcto. |
-| `npm run lint` | Correcto. |
-| `npm run test:coverage` | 257 pruebas aprobadas en 9 archivos. |
-| Nueva pantalla | 100% de líneas, sentencias, funciones y ramas. |
-| `App.tsx` | 100% de líneas, sentencias, funciones y ramas. |
-| Cobertura global | Líneas 99.35%, sentencias 99.04%, funciones 100%, ramas 98.33%. |
-| `npm run build` | Correcto. |
-| `git diff --check` | Correcto. |
-| PostgreSQL 16/PostGIS | Comprobación `app.db.check` aprobada. |
-| Alembic `current` y `heads` | Ambos: `0006_create_cliente_pedido (head)`. |
-| `GET /health` | `status: ok`. |
-| Login HTTP real con cuenta ficticia | HTTP 200, rol `CONDUCTOR`. |
-| CORS del login real | Origen `http://127.0.0.1:5173`, credenciales habilitadas. |
-| Logout HTTP real | Correcto. |
-| Frontend `/conductor/itinerario` | Vite devuelve HTTP 200; esto solo acredita que sirve la aplicación. |
+| `npm run typecheck` | Aprobado |
+| `npm run lint` | Aprobado |
+| `npm run test:coverage` | 264 pruebas aprobadas en 10 archivos |
+| Pantalla, dominio y datos demo | 100% en líneas, sentencias, funciones y ramas |
+| Cobertura global | Líneas 99.37%, sentencias 99.07%, funciones 100%, ramas 98.43% |
+| `npm run build` | Aprobado |
 
-Las pruebas de React comprueban selección, filtros, teclado, redirección a login
-sin identidad y acceso denegado para Administrador, Operador, Analista y Auditor.
-La prueba HTTP real acredita el backend de autenticación; falta comprobar el
-recorrido completo desde el navegador.
+Las pruebas cubren orden y ausencia de siguiente parada, asociación de alertas,
+filtros sin alterar secuencia, detalle/regreso, foco y teclado, estado sin asignación,
+filtro vacío y ruta completada. Las pruebas existentes de acceso por rol permanecen.
 
-El reporte HTML de cobertura se genera en `coverage/index.html`, ignorado por Git.
-La primera ejecución restringida falló por `spawn EPERM`; la ejecución con permiso
-para subprocesos pasó. No se cambiaron configuraciones para ocultar ese error.
+## Navegadores y capturas
 
-## Entorno local de demostración
+Chrome **154.0.8037.98** instalado y Firefox **157.0**, distribución de prueba de
+Playwright 1.64.0, ejecutados en modo headless con contextos nuevos.
 
-Se inició un proyecto Docker separado: `ecologistica-lima-st030-giancarlo`.
-Usa un volumen nuevo; el volumen existente `ecologistica-lima-ecl29_postgis_data`
-no se reutilizó. La base no publica un puerto al host. FastAPI escucha en
-`http://127.0.0.1:8000` y Vite en `http://127.0.0.1:5173`.
+En ambos: login real de conductor, apertura de itinerario, siguiente parada y
+alertas, detalle y regreso por teclado, cuatro filtros, estado sin asignación,
+regreso al ejemplo y escritorio. Se verificó acceso anónimo y denegación al
+Auditor con login simulado. No hubo errores de ejecución de página ni
+desbordamiento horizontal en las vistas comprobadas.
 
-La configuración privada y el acceso de la cuenta ficticia están en el archivo
-local `.env.st030` de la raíz, ignorado por Git. Las claves de acceso son
-`ST030_DRIVER_EMAIL` y `ST030_DRIVER_PASSWORD`. No adjuntar ese archivo ni incluir
-sus valores en capturas, commits o Pull Requests. `frontend/.env.local` contiene
-la URL local del API y también está ignorado.
+[Capturas de interfaz y resultados](evidencias/ECL-56/README.md).
+Esto acredita estos recorridos en las versiones registradas, no una auditoría
+completa WCAG, validación con participantes o funcionamiento en móviles físicos.
 
-Para volver a iniciar los contenedores preparados, desde la raíz:
+## Integración y dependencia de backend
+
+El backend local disponible expone salud, login/logout, pedidos y vehículos.
+No expone endpoints para consultar itinerarios asignados ni alertas operativas.
+Por ello, la autenticación se integra realmente y el itinerario usa una muestra
+aislada, rotulada como ficticia. No se inventó una API ni se presentan los datos
+como asignaciones reales. El modelo `DemoItinerary` no es un contrato de backend.
+
+La conexión a rutas reales requiere acordar contrato, autorización por conductor
+y asignación, y manejo de estados de carga/error. Sigue pendiente antes de aceptar
+esa integración. No se implementa ST-023 ni se cambia el backend para ampliar alcance.
+GPS y sincronización offline no están incluidos; ST-032/ECL-58 aborda sincronización.
+
+## Repetir la comprobación local de navegadores
+
+Requiere API y Vite activos en `127.0.0.1:8000` y `127.0.0.1:5173`, Chrome instalado
+y la cuenta ficticia de desarrollo en `.env.st030`, ignorado por Git. El script
+lee `ST030_DRIVER_EMAIL` y `ST030_DRIVER_PASSWORD` sin imprimirlos. No adjuntar
+ese archivo, credenciales o cookies a evidencias.
+
+Desde `frontend/`, instalar la herramienta de prueba en una subcarpeta ignorada:
+
+```powershell
+npm install --prefix node_modules/.ecl56-browser-check --no-audit --no-fund --ignore-scripts playwright@1.64.0
+$env:PLAYWRIGHT_BROWSERS_PATH = Join-Path (Get-Location) 'node_modules/.ecl56-browser-check/browsers'
+node node_modules/.ecl56-browser-check/node_modules/playwright/cli.js install firefox
+node scripts/verify-driver-itinerary.mjs
+```
+
+No cambia `package.json` ni `package-lock.json` del proyecto. La herramienta
+regenera las capturas y `resultados.json` de esta verificación local.
+
+El entorno exclusivo de demostración conserva la base existente del proyecto:
 
 ```powershell
 docker compose -p ecologistica-lima-st030-giancarlo --env-file .env.st030 up -d --wait db backend
 ```
 
-Para detenerlos conservando el volumen:
+Se comprobó PostgreSQL 16/PostGIS y revisión Alembic `0006_create_cliente_pedido`
+al preparar este entorno; esa comprobación inicial no se repitió en esta corrección.
 
-```powershell
-docker compose -p ecologistica-lima-st030-giancarlo --env-file .env.st030 down
-```
+## Estado de aceptación
 
-El frontend se ejecuta por separado con el comando de desarrollo del README.
+La interfaz de demostración y sus recorridos están implementados y comprobados.
+Pendientes: revisión humana del nuevo incremento, controles CI/SAST del nuevo
+commit, referencia de aprobación ST-029 en Jira y conexión con itinerarios/alertas
+reales cuando el backend proporcione el contrato. El eventual merge no implica
+finalizar automáticamente ECL-56/ST-030 ni ECL-22/EN-004.
 
-## Pendientes de aceptación y evidencias
-
-- Implementación de la **siguiente parada** como información explícita del
-  itinerario; seleccionar una parada para ver su detalle no satisface ese criterio.
-- Implementación de **alertas operativas**; las indicaciones estáticas y el aviso
-  de datos de demostración no satisfacen ese criterio.
-- Prototipos de ECL-55/ST-029 en Figma, guía visual de componentes y aprobación
-  del diseño que debe seguir ST-030.
-- Navegación comprobada en **Chrome y Firefox**, con versiones registradas y
-  capturas de la interfaz móvil a 360 px en ambos navegadores.
-- Recorrido de login y apertura de **Mi itinerario** desde el navegador.
-- Capturas de escritorio, móvil de 360 px, filtros y detalle seleccionado.
-- Comprobación visual de ausencia de desplazamiento horizontal y foco de teclado.
-- Evidencia de acceso anónimo y denegación a otros roles en navegador.
-- Validación del diseño ST-029 y criterios definitivos de ST-030 en Jira.
-- Aprobación humana del PR antes de integrar. Según la revisión compartida por
-  el equipo, los seis checks de CI/CodeQL pasaron para `ea114f9`; estos resultados
-  no sustituyen la aceptación funcional ni la revisión de nuevas revisiones.
-- Conexión a itinerarios reales según los criterios acordados; la demo no acredita
-  la aceptación completa de EN-004.
-
-La sincronización offline corresponde al trabajo posterior **ECL-58 / ST-032**.
-Este documento actualiza el registro local inicial: el usuario ya creó el commit,
-publicó la rama y abrió el PR #24. Los resultados de pruebas anteriores corresponden
-al código del prototipo; esta corrección documental no acredita los pendientes.
+Registro anterior: `ea114f9` creó el prototipo parcial; `6f0cf39` corrigió la
+trazabilidad y pendientes documentales. Los checks de CI/CodeQL comunicados por
+el equipo corresponden a revisiones anteriores, no prueban esta nueva revisión.
