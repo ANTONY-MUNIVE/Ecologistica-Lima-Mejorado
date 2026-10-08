@@ -1,0 +1,33 @@
+{
+  "executedAt": "2026-10-08T20:57:27.016Z",
+  "results": [
+    {
+      "browser": "chrome",
+      "version": "154.0.8037.98",
+      "result": "passed",
+      "widths": [
+        360,
+        1280
+      ],
+      "login": "real",
+      "api": "real",
+      "itinerary": "demo",
+      "horizontalOverflow": false,
+      "pageErrors": 0
+    },
+    {
+      "browser": "firefox",
+      "version": "146.0.1",
+      "result": "passed",
+      "widths": [
+        360,
+        1280
+      ],
+      "login": "real",
+      "api": "real",
+      "itinerary": "demo",
+      "horizontalOverflow": false,
+      "pageErrors": 0
+    }
+  ]
+}

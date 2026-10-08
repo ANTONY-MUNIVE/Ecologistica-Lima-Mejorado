@@ -2,6 +2,14 @@
 
 **Optimizador de Rutas Sostenibles para DistriRápido S.A.C.**
 
+## Entrega local Sprint 2 — 9 de octubre de 2026
+
+El avance de este respaldo se describe en [la matriz de alcance y evidencias](docs/entrega-sprint2/ENTREGA.md).
+Incluye [arranque reproducible y datos sintéticos](docs/entrega-sprint2/INICIO.md),
+[validaciones ejecutadas](docs/entrega-sprint2/VALIDACION.md) y
+[guion de exposición](docs/entrega-sprint2/GUION.md).
+La integración es local: no equivale a aceptación del equipo ni a cierre de Jira.
+
 Repositorio de documentación y desarrollo del proyecto académico EcoLogística Lima. La solución propone una plataforma web para gestión operativa, optimización VRPTW/Green VRP, seguimiento geográfico, analítica y reportes de sostenibilidad.
 
 ## Equipo
