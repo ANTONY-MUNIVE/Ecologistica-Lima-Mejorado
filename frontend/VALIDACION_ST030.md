@@ -3,6 +3,14 @@
 Fecha: 08/10/2026, America/Lima.
 Rama: `feature/st-030-itinerario-movil`.
 
+Trazabilidad: **ECL-56 / ST-030 → ECL-22 / EN-004**.
+Diseño previo requerido: **ECL-55 / ST-029**.
+Commit del prototipo: `ea114f9`.
+Pull Request: [#24](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/24).
+
+El PR representa un avance parcial pendiente de aprobación humana. Su eventual
+integración no implica finalizar ECL-56/ST-030 ni ECL-22/EN-004.
+
 ## Incremento
 
 Prototipo del itinerario móvil con tres paradas ficticias, resumen por estado,
@@ -73,13 +81,26 @@ El frontend se ejecuta por separado con el comando de desarrollo del README.
 
 ## Pendientes de aceptación y evidencias
 
+- Implementación de la **siguiente parada** como información explícita del
+  itinerario; seleccionar una parada para ver su detalle no satisface ese criterio.
+- Implementación de **alertas operativas**; las indicaciones estáticas y el aviso
+  de datos de demostración no satisfacen ese criterio.
+- Prototipos de ECL-55/ST-029 en Figma, guía visual de componentes y aprobación
+  del diseño que debe seguir ST-030.
+- Navegación comprobada en **Chrome y Firefox**, con versiones registradas y
+  capturas de la interfaz móvil a 360 px en ambos navegadores.
 - Recorrido de login y apertura de **Mi itinerario** desde el navegador.
 - Capturas de escritorio, móvil de 360 px, filtros y detalle seleccionado.
 - Comprobación visual de ausencia de desplazamiento horizontal y foco de teclado.
 - Evidencia de acceso anónimo y denegación a otros roles en navegador.
 - Validación del diseño ST-029 y criterios definitivos de ST-030 en Jira.
-- Revisión del equipo, PR y controles de CI/SAST antes de integrar.
+- Aprobación humana del PR antes de integrar. Según la revisión compartida por
+  el equipo, los seis checks de CI/CodeQL pasaron para `ea114f9`; estos resultados
+  no sustituyen la aceptación funcional ni la revisión de nuevas revisiones.
 - Conexión a itinerarios reales según los criterios acordados; la demo no acredita
   la aceptación completa de EN-004.
 
-No se creó ningún commit ni se publicó una rama o Pull Request.
+La sincronización offline corresponde al trabajo posterior **ECL-58 / ST-032**.
+Este documento actualiza el registro local inicial: el usuario ya creó el commit,
+publicó la rama y abrió el PR #24. Los resultados de pruebas anteriores corresponden
+al código del prototipo; esta corrección documental no acredita los pendientes.
