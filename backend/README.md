@@ -36,6 +36,23 @@ de vinculación obligatoria de cuentas, requieren confirmación de los BDD de
 ECL-47. Los límites aquí aplicados son decisiones técnicas propuestas para
 proteger la integridad de datos, no reglas de negocio aprobadas.
 
+## Preferencias de entrega — ECL-52
+
+`GET /clientes/{cliente_id}/preferencias` recupera el horario preferido, la
+referencia y la restricción de acceso del cliente existente. `PATCH` en la misma
+ruta actualiza únicamente los campos enviados; `null` elimina una preferencia.
+El cambio se confirma en una transacción. Administrador y Operador pueden leer
+y actualizar; los demás roles no reciben esos datos. El cliente inexistente
+devuelve `404`, un cuerpo vacío o texto en blanco devuelve `422`, y un fallo de
+almacenamiento devuelve `503` sin detalles internos. El contrato aparece en
+OpenAPI y reutiliza columnas existentes de `cliente`, sin migración nueva.
+
+El horario se conserva como texto de hasta 120 caracteres, porque todavía no
+hay un formato BDD aprobado para transformarlo en una ventana de pedido. El
+frontend puede mostrarlo como sugerencia durante el registro; el operador
+establece explícitamente la ventana. Esta decisión de presentación está
+pendiente de ECL-51/ECL-54.
+
 ## Instalación (PowerShell)
 
 Esta instalación directa sigue disponible como alternativa a Docker Compose.

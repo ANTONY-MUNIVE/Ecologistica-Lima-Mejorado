@@ -10,6 +10,7 @@ from app.api.auth import router as auth_router
 from app.api.conductores import router as driver_router
 from app.api.health import router as health_router
 from app.api.pedidos import router as order_router
+from app.api.preferencias import router as preference_router
 from app.api.vehiculos import router as vehicle_router
 from app.core.config import Settings
 from app.db.session import build_audit_engine, build_engine, session_factory
@@ -68,4 +69,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(order_router)
     app.include_router(vehicle_router)
     app.include_router(driver_router)
+    app.include_router(preference_router)
     return app
