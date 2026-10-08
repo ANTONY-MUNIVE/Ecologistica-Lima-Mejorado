@@ -26,10 +26,10 @@ describe('driver HTTP service', () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify(row), { status: 200 }))
     expect(await updateDriver(conductor_id, payload)).toEqual(row)
     expect(fetchMock.mock.calls[2][1]).toEqual(expect.objectContaining({ method: 'PATCH', credentials: 'include' }))
-    const changes = JSON.parse(fetchMock.mock.calls[2][1]?.body as string)
+    const changes: unknown = JSON.parse(fetchMock.mock.calls[2][1]?.body as string)
     expect(changes).not.toHaveProperty('usuario_id')
     expect(changes).not.toHaveProperty('conductor_id')
-    expect(changes.nombre).toBe(row.nombre)
+    expect(changes).toMatchObject({ nombre: row.nombre })
   })
 
   it('no muestra detalles del servidor y rechaza respuestas incompletas', async () => {
