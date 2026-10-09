@@ -61,6 +61,29 @@ def test_login_rejects_client_identity_fields():
 
 
 @pytest.mark.parametrize(
+    "payload",
+    [
+        {"email": "PRIVATE-EMAIL", "password": {"value": "PRIVATE-PASSWORD"}},
+        {
+            "email": "PRIVATE-EMAIL",
+            "password": "PRIVATE-PASSWORD",
+            "PRIVATE-FIELD": "PRIVATE-VALUE",
+        },
+    ],
+)
+def test_login_validation_never_echoes_credentials(payload):
+    app = create_app(Settings(database_url=None))
+    service = Mock()
+    app.dependency_overrides[get_authentication_service] = lambda: service
+    with TestClient(app) as client:
+        response = client.post("/login", json=payload)
+    assert response.status_code == 422
+    assert "PRIVATE-" not in response.text
+    assert "set-cookie" not in response.headers
+    service.login.assert_not_called()
+
+
+@pytest.mark.parametrize(
     "private_detail", ["existing-user-argon-secret", "dummy-argon-secret"]
 )
 def test_operational_login_failure_has_no_cookie_or_secret(private_detail):

@@ -11,6 +11,7 @@ from app.api.dependencies import (
     get_authenticated_session,
     get_authentication_service,
 )
+from app.api.validation import PrivateValidationRoute
 from app.core.config import Settings
 from app.core.rbac import Rol
 from app.services.autenticacion import (
@@ -20,7 +21,7 @@ from app.services.autenticacion import (
     InvalidCredentials,
 )
 
-router = APIRouter(tags=["access"])
+router = APIRouter(tags=["access"], route_class=PrivateValidationRoute)
 
 
 class LoginRequest(BaseModel):
