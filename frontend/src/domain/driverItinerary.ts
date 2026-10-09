@@ -10,6 +10,7 @@ export interface DriverStop {
   reception: string
   instructions: readonly string[]
   state: DeliveryState
+  coordinates: { lat: number; lng: number }
 }
 export interface DriverAlert {
   id: string

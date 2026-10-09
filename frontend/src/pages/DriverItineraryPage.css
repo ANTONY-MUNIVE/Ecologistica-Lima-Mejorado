@@ -1,11 +1,22 @@
 .driver-page {
-  width: min(100%, 42rem);
+  width: min(100%, 78rem);
   min-width: 0;
   margin-inline: auto;
   color: #17251c;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+.driver-map-panel { margin: 1.25rem 0; padding: 1rem; border: 1px solid #c9d6cd; border-radius: 1rem; background: #f7fbf8; }
+.driver-map-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.driver-map-header h2 { margin: 0; }
+.driver-map-kicker { margin: 0 0 .25rem; color: #166534; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.driver-route-metrics { display: grid; gap: .15rem; margin: 0; text-align: right; color: #526158; font-size: .8rem; }
+.driver-route-metrics strong { color: #17251c; font-size: 1rem; }
+.driver-map-canvas { min-height: 22rem; margin-top: 1rem; border-radius: .75rem; background: #dce9e0; }
+.driver-map-loading { margin: .75rem 0 0; color: #526158; }
+.driver-map-state { display: grid; min-height: 10rem; place-content: center; gap: .5rem; margin-top: 1rem; padding: 1.5rem; border: 1px dashed #96aa9c; border-radius: .75rem; background: #fff; color: #526158; }
+.driver-map-state strong { color: #17251c; }
+.driver-map-caption { margin: .75rem 0 0; color: #526158; font-size: .75rem; }
 .driver-page h1 { font-size: 1.5rem; line-height: 2rem; }
 .driver-page h2 { margin: 1.25rem 0 .75rem; font-size: 1.125rem; line-height: 1.625rem; }
 .driver-page section { min-width: 0; }
@@ -46,4 +57,7 @@
 .driver-footnote { color: #526158; font-size: .75rem; }
 @media (max-width: 30rem) {
   .main-content:has(.driver-page) { width: calc(100% - 2rem); padding-block: 1rem; }
+  .driver-map-header { display: grid; }
+  .driver-route-metrics { text-align: left; }
+  .driver-map-canvas { min-height: 16rem; }
 }

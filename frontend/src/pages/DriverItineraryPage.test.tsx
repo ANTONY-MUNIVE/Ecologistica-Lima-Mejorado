@@ -1,9 +1,16 @@
+import { StrictMode } from 'react'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DEMO_ITINERARY } from '../data/demoDriverItinerary'
 import { DriverItineraryPage } from './DriverItineraryPage'
+import * as googleMaps from '../services/googleMaps'
 
 describe('DriverItineraryPage — ECL-56, demostración', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+  })
+
   it('distingue la siguiente parada, la alerta y el aviso de datos ficticios', () => {
     render(<DriverItineraryPage />)
     expect(screen.getByRole('note')).toHaveTextContent('Datos de demostración')
@@ -11,6 +18,39 @@ describe('DriverItineraryPage — ECL-56, demostración', () => {
     expect(within(screen.getByRole('region', { name: 'Siguiente parada' })).getByText('Mercado Central')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Alertas operativas de demostración' })).getByText('Av. Abancay: +15 min previstos.')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^Ver parada/ })).toHaveLength(4)
+  })
+
+  it('mantiene el itinerario utilizable cuando Google Maps no está configurado', () => {
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', '')
+    render(<DriverItineraryPage />)
+    expect(screen.getByRole('region', { name: 'Mapa del itinerario' })).toHaveTextContent('Mapa no configurado')
+    expect(screen.getByRole('region', { name: 'Mapa del itinerario' })).toHaveTextContent('La lista sigue disponible')
+  })
+
+  it('limpia el mapa al salir del itinerario bajo StrictMode', async () => {
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+    const dispose = vi.fn()
+    vi.spyOn(googleMaps, 'loadGoogleMaps').mockResolvedValue(undefined)
+    vi.spyOn(googleMaps, 'createMap').mockReturnValue({ map: {} as ReturnType<typeof googleMaps.createMap>['map'], markers: [], dispose })
+    vi.spyOn(googleMaps, 'requestGoogleRoute').mockResolvedValue({ path: [], distanceMeters: 1000, durationSeconds: 120 })
+    vi.spyOn(googleMaps, 'drawRoute').mockReturnValue({ setMap: vi.fn() })
+    const view = render(<StrictMode><DriverItineraryPage /></StrictMode>)
+    await screen.findByText('Cargando mapa…')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Ver detalle de parada' }))
+    expect(screen.getByRole('heading', { name: 'Detalle de parada' })).toHaveFocus()
+    view.unmount()
+    expect(dispose).toHaveBeenCalled()
+  })
+
+  it('mantiene el mapa cuando Routes API rechaza el recorrido', async () => {
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+    vi.spyOn(googleMaps, 'loadGoogleMaps').mockResolvedValue(undefined)
+    vi.spyOn(googleMaps, 'createMap').mockReturnValue({ map: {} as ReturnType<typeof googleMaps.createMap>['map'], markers: [], dispose: vi.fn() })
+    vi.spyOn(googleMaps, 'requestGoogleRoute').mockRejectedValue(new Error('Routes API no disponible'))
+    render(<DriverItineraryPage />)
+
+    expect(await screen.findByText('No se pudo calcular el recorrido')).toBeInTheDocument()
+    expect(screen.getByLabelText('Mapa interactivo de las paradas')).toBeInTheDocument()
   })
 
   it('abre el detalle de la siguiente parada y vuelve con foco en el título', async () => {
