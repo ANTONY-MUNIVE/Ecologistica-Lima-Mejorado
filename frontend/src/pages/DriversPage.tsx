@@ -43,7 +43,7 @@ function formValues(driver: DriverRecord): FormValues {
   }
 }
 
-function validate(values: FormValues): { errors: Errors; payload?: DriverPayload } {
+function validate(values: FormValues, hasLinkedAccount: boolean): { errors: Errors; payload?: DriverPayload } {
   const errors: Errors = {}
   const trimmed = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.trim()])) as FormValues
   for (const field of FIELDS.filter((item) => item.required)) {
@@ -55,6 +55,7 @@ function validate(values: FormValues): { errors: Errors; payload?: DriverPayload
   if (trimmed.telefono.length > 30) errors.telefono = 'Máximo 30 caracteres.'
   if (trimmed.punto_partida.length > 255) errors.punto_partida = 'Máximo 255 caracteres.'
   if (trimmed.usuario_id && !UUID.test(trimmed.usuario_id)) errors.usuario_id = 'Ingresa un UUID válido.'
+  if (hasLinkedAccount && !trimmed.usuario_id) errors.usuario_id = 'La cuenta vinculada no se puede quitar desde este formulario.'
   const experience = Number(trimmed.experiencia_anios)
   if (!Number.isInteger(experience) || experience < 0 || experience > 32767) {
     errors.experiencia_anios = 'Ingresa años enteros no negativos.'
@@ -100,7 +101,7 @@ function DriverForm({ selected, onSaved, onCancel }: {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy.current) return
-    const result = validate(values)
+    const result = validate(values, Boolean(selected?.usuario_id))
     setErrors(result.errors)
     if (!result.payload) {
       setMessage('Revisa los campos indicados.')

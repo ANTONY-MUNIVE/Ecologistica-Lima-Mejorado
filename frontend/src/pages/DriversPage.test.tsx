@@ -105,4 +105,16 @@ describe('DriversPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo guardar el conductor.')
     expect(screen.queryByText('private SQL')).not.toBeInTheDocument()
   })
+
+  it('no confirma una desvinculación de cuenta que la API no admite', async () => {
+    listMock.mockResolvedValueOnce([{ ...row, usuario_id: '123e4567-e89b-12d3-a456-426614174099' }])
+    render(<DriversPage />)
+    await screen.findByText('DNI: 12345678')
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+    change('ID de cuenta Conductor (opcional)', '')
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar conductor' }))
+    expect(screen.getByLabelText('ID de cuenta Conductor (opcional)')).toHaveAttribute('aria-invalid', 'true')
+    expect(updateMock).not.toHaveBeenCalled()
+    expect(screen.queryByText('Conductor Conductor sintético guardado.')).not.toBeInTheDocument()
+  })
 })
