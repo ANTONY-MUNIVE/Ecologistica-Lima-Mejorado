@@ -2,6 +2,19 @@
 import assert from 'node:assert/strict'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { execFileSync } from 'node:child_process'
+
+const repository = fileURLToPath(new URL('../../', import.meta.url))
+const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim()
+const sourcePaths = ['backend/app', 'backend/alembic', 'backend/requirements-dev.lock', 'frontend/src', 'frontend/package-lock.json', 'frontend/scripts/verify-sprint2.mjs']
+execFileSync('git', ['diff', '--exit-code', 'HEAD', '--', ...sourcePaths], { cwd: repository, stdio: 'pipe' })
+const sourceBlobs = execFileSync('git', ['ls-tree', '-r', sourceCommit, '--', ...sourcePaths], { cwd: repository, encoding: 'utf8' }).trim().split('\n')
+const apiUrl = process.env.SPRINT2_API_URL || 'http://127.0.0.1:8000'
+const uiUrl = process.env.SPRINT2_UI_URL || 'http://127.0.0.1:5173'
+for (const origin of [apiUrl, uiUrl]) {
+  const url = new URL(origin)
+  assert(url.protocol === 'http:' && url.hostname === '127.0.0.1' && !url.username && !url.password, 'El recorrido requiere servicios locales aislados')
+}
 
 const { chromium, firefox } = await import('../node_modules/.sprint2-browser/node_modules/playwright/index.mjs')
 const privateText = await readFile(new URL('../../.env.sprint2', import.meta.url), 'utf8')
@@ -10,7 +23,7 @@ const settings = Object.fromEntries(privateText.split(/\r?\n/).filter((line) => 
   return [line.slice(0, position), line.slice(position + 1)]
 }))
 assert(settings.DEMO_PASSWORD, 'Falta DEMO_PASSWORD en el archivo privado local')
-const output = fileURLToPath(new URL('../evidencias/sprint2-local/', import.meta.url))
+const output = process.env.SPRINT2_EVIDENCE_DIR || fileURLToPath(new URL('../evidencias/sprint2-local/', import.meta.url))
 await mkdir(output, { recursive: true })
 const results = []
 for (const [name, launcher, options] of [
@@ -26,7 +39,7 @@ for (const [name, launcher, options] of [
   const width = async () => assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Desbordamiento horizontal')
   const capture = async (label) => { await width(); await page.screenshot({ path: `${output}/${name}-${label}.png`, fullPage: true }) }
   const login = async (email) => {
-    await page.goto('http://127.0.0.1:5173/login')
+    await page.goto(`${uiUrl}/login`)
     await page.getByLabel('Correo electrónico').fill(email)
     await page.getByLabel('Contraseña').fill(settings.DEMO_PASSWORD)
     await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click()
@@ -38,6 +51,12 @@ for (const [name, launcher, options] of [
     phase = 'formulario y persistencia de conductores'
     await page.getByRole('link', { name: 'Conductores', exact: true }).click()
     await page.getByText('DEMO Conductor sintético 01', { exact: true }).waitFor()
+    const linkedCard = page.locator('.drivers-page .driver-card').filter({ hasText: 'DEMO Conductor sintético 01' })
+    await linkedCard.getByRole('button', { name: 'Editar', exact: true }).click()
+    await page.locator('#driver-usuario_id').fill('')
+    await page.getByRole('button', { name: 'Guardar conductor' }).click()
+    await page.getByText('La cuenta vinculada no se puede quitar desde este formulario.', { exact: true }).waitFor()
+    await page.getByRole('button', { name: 'Cancelar edición' }).click()
     await page.getByRole('button', { name: 'Guardar conductor' }).click()
     assert.equal(await page.locator('#driver-nombre').evaluate((node) => node === document.activeElement), true)
     const dni = String(91000000 + Math.floor(Math.random() * 999999))
@@ -81,7 +100,7 @@ for (const [name, launcher, options] of [
     assert.equal(await page.getByLabel('Punto de referencia', { exact: true }).inputValue(), `DEMO Referencia persistida ${name}`)
     await capture('pedido-preferencias-360')
     phase = 'itinerario de demostración, teclado y lista vacía'
-    assert.equal((await context.request.post('http://127.0.0.1:8000/logout')).status(), 204)
+    assert.equal((await context.request.post(`${apiUrl}/logout`)).status(), 204)
     await login('conductor@example.test')
     await page.getByRole('link', { name: 'Mi itinerario', exact: true }).click()
     await page.getByRole('heading', { name: 'Siguiente parada', exact: true }).waitFor()
@@ -102,11 +121,11 @@ for (const [name, launcher, options] of [
     await page.setViewportSize({ width: 1280, height: 900 })
     await capture('itinerario-demo-1280')
     phase = 'RBAC real de auditor'
-    assert.equal((await context.request.post('http://127.0.0.1:8000/logout')).status(), 204)
+    assert.equal((await context.request.post(`${apiUrl}/logout`)).status(), 204)
     await login('auditor@example.test')
     assert.equal(await page.getByRole('link', { name: 'Conductores', exact: true }).count(), 0)
-    assert.equal((await context.request.get('http://127.0.0.1:8000/conductores')).status(), 403)
-    assert.equal((await context.request.get('http://127.0.0.1:8000/internal/metrics')).status(), 200)
+    assert.equal((await context.request.get(`${apiUrl}/conductores`)).status(), 403)
+    assert.equal((await context.request.get(`${apiUrl}/internal/metrics`)).status(), 200)
     assert.equal(errors.length, 0)
     results.push({ browser: name, version: browser.version(), result: 'passed', widths: [360, 1280], login: 'real', api: 'real', itinerary: 'demo', horizontalOverflow: false, pageErrors: errors.length })
     console.log(`${name}: recorrido correcto`)
@@ -119,4 +138,4 @@ for (const [name, launcher, options] of [
     await browser.close()
   }
 }
-await writeFile(`${output}/resultado.json`, JSON.stringify({ executedAt: new Date().toISOString(), results }, null, 2) + '\n')
+await writeFile(`${output}/resultado.json`, JSON.stringify({ executedAt: new Date().toISOString(), sourceCommit, sourceBlobs, apiUrl, uiUrl, results }, null, 2) + '\n')
