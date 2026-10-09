@@ -1,6 +1,7 @@
 # Avance local Sprint 2 — entrega del 9 de octubre de 2026
 
-Corte de verificación: 8 de octubre de 2026, America/Lima. Este documento describe
+Corte de verificación: 8 de octubre de 2026, America/Lima. Revisión final:
+[REVISION_FINAL.md](REVISION_FINAL.md). Este documento describe
 un respaldo independiente. **Ninguna tarea se declara Hecho ni aceptada.**
 No se modificó Jira ni se publicaron ramas, PR o merges remotos.
 
@@ -21,8 +22,13 @@ No se modificó Jira ni se publicaron ramas, PR o merges remotos.
   No se cambió su visibilidad ni se publicó nada.
 - Rama de entrada limpia: `respaldo/sprint2-avance`, sin operación Git pendiente.
   No fue necesario crear worktree. Se conservó esa rama.
-- `fetch upstream` ejecutado. Base verificada de `upstream/main`:
+- `fetch upstream` ejecutado. Base registrada para el código entregado:
   `099838bdec64c16c4ecaee04644f2f69ec2c46dc` (merge PR #24).
+  En la revisión final upstream/main avanzó a `de1819cdc5c2e308d90618d756c6028dc233e2d1`:
+  tres documentos BDD/capacidad, sin cambios de runtime; no se integraron automáticamente.
+- El estado de entrada anterior describe la primera ejecución. La revisión final
+  comenzó en `respaldo/sprint2-integracion`, SHA `6e984427f87a15e4972b55aa968ae6ed73291824`,
+  con árbol limpio, y utiliza otro checkout, procesos y bases nuevos.
 
 ## Funcionalidad y límites
 
@@ -49,19 +55,19 @@ U = pruebas unitarias; I = integración PostgreSQL/PostGIS; V = navegador real.
 | Tarea / responsable Jira | Criterio y entregable | Implementación local / evidencia | Dependencia y pendiente |
 |---|---|---|---|
 | [ECL-46 / ST-020](https://continental-team-il84x39k.atlassian.net/browse/ECL-46) Antony | Modelo y migración con DNI único, licencia, disponibilidad, contacto y partida | `Conductor`, Alembic `0007`; U modelo, I `test_conductor_migration.py`, `alembic check` | Confirmar DDL propuesto con Frank; revisión del equipo |
-| [ECL-47 / ST-021](https://continental-team-il84x39k.atlassian.net/browse/ECL-47) Frank | BDD alta, actualización, DNI duplicado y licencia vencida; RF-003/RN-005 | Se contrastó descripción del ticket y línea base; no se encontró artefacto BDD versionado del Sprint 2 | Publicar/validar escenarios; no se atribuyen los tests locales a Frank |
+| [ECL-47 / ST-021](https://continental-team-il84x39k.atlassian.net/browse/ECL-47) Frank | BDD alta, actualización, DNI duplicado y licencia vencida; RF-003/RN-005 | BDD de Frank disponible en upstream/main, PR #26; revisado como **borrador**, sin implementación atribuida | Ratificar contrato; diferencias en REVISION_FINAL; no son pruebas ejecutadas por Frank |
 | [ECL-48 / ST-022](https://continental-team-il84x39k.atlassian.net/browse/ECL-48) Antony | API conductores validada y autorizada, sin persistir inválidos | POST/GET/PATCH y `/me`; U API/repositorio/servicio; I sesiones, rollback y RBAC | ECL-46/47; sin API de rutas/reportes; aceptación pendiente |
 | [ECL-49 / ST-023](https://continental-team-il84x39k.atlassian.net/browse/ECL-49) Giancarlo | Formulario/lista, API, carga/error, edición autorizada | `DriversPage`, servicio tipado, foco inválido, listas vacías; U+V alta y edición sin cuenta | API real integrada; revisar diseño con responsable |
-| [ECL-50 / ST-024](https://continental-team-il84x39k.atlassian.net/browse/ECL-50) José | Pruebas válidos/inválidos, permisos, disponibilidad y persistencia | `test_conductor_http_e2e.py`; I real, U y cobertura | Falta contraste final BDD y CI remoto de estos commits |
-| [ECL-51 / ST-025](https://continental-team-il84x39k.atlassian.net/browse/ECL-51) Frank | BDD preferencias válidas/inválidas y actualización | Descripción consultada; no se encontró BDD versionado | Acordar formato de horario y semántica de campos vacíos |
+| [ECL-50 / ST-024](https://continental-team-il84x39k.atlassian.net/browse/ECL-50) José | Pruebas válidos/inválidos, permisos, disponibilidad y persistencia | `test_conductor_http_e2e.py`; I real, U y cobertura | Contraste BDD registrado; divergencias, CI remoto y aceptación pendientes |
+| [ECL-51 / ST-025](https://continental-team-il84x39k.atlassian.net/browse/ECL-51) Frank | BDD preferencias válidas/inválidas y actualización | BDD de Frank disponible en upstream/main, PR #27; **borrador** revisado | Ratificar propuestas; diferencia de recorte de espacios; no define formato temporal |
 | [ECL-52 / ST-026](https://continental-team-il84x39k.atlassian.net/browse/ECL-52) Antony | Persistir/recuperar preferencias al registrar pedidos | GET/PATCH sobre Cliente existente, sin tabla duplicada; U+I | ECL-51; horario textual propuesto, ventana explícita |
 | [ECL-53 / ST-027](https://continental-team-il84x39k.atlassian.net/browse/ECL-53) José | Formulario guardar/recuperar, errores legibles | `PreferencesPage`; consulta y botón Usar referencia en pedido; U+V | Revisión UX y BDD; búsqueda por UUID, no catálogo nuevo de clientes |
-| [ECL-54 / ST-028](https://continental-team-il84x39k.atlassian.net/browse/ECL-54) Frank | Validar flujo completo, inválidos y cliente inexistente | `test_preferencias_http_e2e.py`, persistencia Cliente y Pedido, 404/422/RBAC; V | No equivale a aceptación de Frank; pendientes BDD ECL-51 |
+| [ECL-54 / ST-028](https://continental-team-il84x39k.atlassian.net/browse/ECL-54) Frank | Validar flujo completo, inválidos y cliente inexistente | `test_preferencias_http_e2e.py`, persistencia Cliente y Pedido, 404/422/RBAC; V; reforzado aislamiento entre dos clientes y atomicidad | No equivale a aceptación de Frank; diferencia de espacios pendiente |
 | [ECL-55 / ST-029](https://continental-team-il84x39k.atlassian.net/browse/ECL-55) Giancarlo | Diseño 360px, contraste, siguiente parada y alertas, Figma | PR #25 revisado: documentación/diseño, no incorporado automáticamente | Aprobación de diseño/Figma no verificada; cambios abiertos separados |
 | [ECL-56 / ST-030](https://continental-team-il84x39k.atlassian.net/browse/ECL-56) Giancarlo | Vista móvil de ruta/paradas/alertas, Chrome y Firefox | PR #24 ya en base; U existentes y V nuevo 360/1280, detalle, vacío y foco | Sigue siendo demo; asignación/API itinerario pendiente |
 | [ECL-57 / ST-031](https://continental-team-il84x39k.atlassian.net/browse/ECL-57) José | Responsive 360px, teclado, etiquetas, foco, contraste/navegadores | Corregida colisión `.driver-card`; V sin overflow, teclado y foco en Chrome/Firefox | Auditoría completa WCAG AA/contraste/lector de pantalla no verificada |
 | [ECL-58 / ST-032](https://continental-team-il84x39k.atlassian.net/browse/ECL-58) José | Último itinerario offline, cola de reportes, sincronizar sin duplicar y estado visible | No implementado; aviso explícito de ausencia en itinerario | Requiere contrato de itinerario y reportes, identidad, idempotencia/conflictos/retención; alcance separado del CRUD |
-| [ECL-59 / ST-033](https://continental-team-il84x39k.atlassian.net/browse/ECL-59) Julio | Plan 1000 pedidos/día, 50 vehículos, 100 concurrentes, P95≤2s, 5xx<1%, SLA≥99,5% mensual | PR #23 y actualización de rama revisados; plan no fusionado | Revisar referencias RNF-007/008 y aprobación del plan |
+| [ECL-59 / ST-033](https://continental-team-il84x39k.atlassian.net/browse/ECL-59) Julio | Plan 1000 pedidos/día, 50 vehículos, 100 concurrentes, P95≤2s, 5xx<1%, SLA≥99,5% mensual | PR #23 fusionado por el equipo en upstream; documento revisado, sin carga ejecutada | Referencias actuales RNF-007 disponibilidad/RNF-008 capacidad correctas; aprobación no acreditada |
 | [ECL-60 / ST-034](https://continental-team-il84x39k.atlassian.net/browse/ECL-60) Antony | Latencias, 5xx, disponibilidad API/BD en entorno de pruebas | `/health/ready`, `/internal/metrics`, hooks SQL; U y I, acceso real Auditor en V | Exportación persistente, agregación multiworker y captura por intervalo pendientes |
 | [ECL-61 / ST-035](https://continental-team-il84x39k.atlassian.net/browse/ECL-61) José | Carga reproducible 1000/50/100 con latencia, errores y persistencia | No ejecutada; suite funcional no se presenta como carga | ECL-59/60 y datos/harness aprobado; no hay P95 ni SLA acreditados |
 | [ECL-62 / ST-036](https://continental-team-il84x39k.atlassian.net/browse/ECL-62) Julio | Informe, SLA y procedimientos sustentados por métricas reales | Este informe cubre avance y pruebas funcionales, no informe de carga/SLA | ECL-61 y observación mensual |
@@ -75,14 +81,16 @@ U = pruebas unitarias; I = integración PostgreSQL/PostGIS; V = navegador real.
    alta exige cuenta, reasignación y ciclo de baja con ECL-47.
 2. DNI de ocho dígitos; licencia como texto de hasta 40, teléfono hasta 30 y partida
    hasta 255; experiencia entera no negativa. Son restricciones técnicas del
-   incremento donde no hay DDL/BDD específico aprobado. DNI único y rechazo de
-   licencia vencida sí tienen respaldo en RF-003/tickets.
+   incremento donde no hay DDL/BDD específico aprobado. DNI único tiene respaldo.
+   Licencia vencida presenta ambigüedad RF-003/US-003: el código rechaza guardado,
+   Frank propone guardarlo no asignable; requiere resolución, sin cambiar la línea base.
 3. Fecha de licencia se contrasta con el día de Lima; disponibilidad requiere
    timestamps con zona y final posterior. **RN-005 regula conducción de rutas**
    (máximo 8h/día, 4h continuas y descanso de 1h), no limita este intervalo de
    disponibilidad. No se ha implementado el motor de esas restricciones de ruta.
 4. Preferencias reutilizan longitudes de Cliente: 120/255/255. null borra; texto
-   vacío y payload sin cambios son inválidos. Horario sigue textual; solo una
+   vacío y payload sin cambios son inválidos. El código recorta espacios exteriores;
+   Frank propone preservarlos. Horario sigue textual; solo una
    acción explícita copia referencia al pedido. No se convierte automáticamente
    en ventana ni se interpreta restricción de acceso como regla de optimización.
 5. Datos detallados de conductores/preferencias usan permisos generales existentes.
@@ -97,7 +105,7 @@ U = pruebas unitarias; I = integración PostgreSQL/PostGIS; V = navegador real.
 |---|---|---|
 | [PR #24, itinerario Giancarlo](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/24) | Merge `099838bdec64c16c4ecaee04644f2f69ec2c46dc`; commits `ea114f9`, `6f0cf39`, `5ffe0e9` | Ya pertenece a upstream/main; se preservó historial, interfaz, tests y evidencias previas |
 | [PR #25, diseño móvil](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/25) | `66e535babe5c6f537bc214828e5eeb91dc8c86ec`, aporte `af72041` | Diff de siete documentos/imágenes revisado; sin dependencia de runtime; pendiente revisión del equipo, no incorporado |
-| [PR #23, capacidad](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/23) / rama actualizada | `bbaaa3c70f282a7a86e25c6cf47287e779c2c6f0`, previo `11b8839` | Solo plan; no harness probado. No incorporado. Referencias RNF-007 rendimiento/RNF-008 disponibilidad aparecen invertidas respecto de línea base |
+| [PR #23, capacidad](https://github.com/JulioNaupariC/EcoLog-stica-Lima/pull/23) | Head final `16e0b5ae111cc05efbf6579769c8c56a84d425b3`; merge `f15e9a7dabfa9b22ee8d0542f6241fbc80419a38` | Fusionado por el equipo; no incorporado al código local. El documento vigente corrige las referencias RNF antes observadas; no acredita ejecución |
 
 No se encontraron aportes de implementación de conductores/preferencias que
 sustituyeran estos incrementos. No se incorporó ningún PR abierto basándose en CI.

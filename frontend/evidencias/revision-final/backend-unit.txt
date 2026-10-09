@@ -1,0 +1,78 @@
+........................................................................ [ 20%]
+........................................................................ [ 41%]
+........................................................................ [ 62%]
+........................................................................ [ 83%]
+........................................................                 [100%]
+============================== warnings summary ===============================
+.venv\deps\fastapi\testclient.py:1
+  <checkout-limpio>\backend\.venv\deps\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+.venv\deps\starlette\testclient.py:53
+  <checkout-limpio>\backend\.venv\deps\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.12.10-final-0 _______________
+
+Name                              Stmts   Miss  Cover   Missing
+---------------------------------------------------------------
+app\__init__.py                       0      0   100%
+app\api\__init__.py                   0      0   100%
+app\api\auth.py                      38      0   100%
+app\api\conductores.py               53      9    83%   29-34, 87, 97-100
+app\api\dependencies.py              36      4    89%   22-27
+app\api\health.py                     8      0   100%
+app\api\metrics.py                   21      3    86%   24-26
+app\api\pedidos.py                   20      4    80%   20-25
+app\api\preferencias.py              27      6    78%   24-29, 39-40
+app\api\validation.py                22      0   100%
+app\api\vehiculos.py                 39      1    97%   28
+app\core\__init__.py                  0      0   100%
+app\core\config.py                   71      5    93%   22, 31, 81, 86, 92
+app\core\passwords.py                32      0   100%
+app\core\rbac.py                    110      0   100%
+app\core\session_tokens.py            8      0   100%
+app\db\__init__.py                    0      0   100%
+app\db\base.py                        3      0   100%
+app\db\check.py                      29      1    97%   41
+app\db\session.py                    21      0   100%
+app\main.py                          69      2    97%   38, 40
+app\models\__init__.py                8      0   100%
+app\models\auditoria.py              18      0   100%
+app\models\cliente.py                13      1    92%   23
+app\models\conductor.py              21      0   100%
+app\models\pedido.py                 25      1    96%   74
+app\models\sesion.py                 16      1    94%   33
+app\models\usuario.py                21      0   100%
+app\models\vehiculo.py               20      0   100%
+app\observability\__init__.py         0      0   100%
+app\observability\metrics.py         60      0   100%
+app\repositories\__init__.py          0      0   100%
+app\repositories\auditoria.py        93      7    92%   113, 115, 117, 119, 127, 131, 151
+app\repositories\clientes.py         27      4    85%   32-33, 38-39
+app\repositories\conductores.py      50      0   100%
+app\repositories\pedidos.py          31      0   100%
+app\repositories\sesiones.py         43     20    53%   32, 35-43, 46-65, 68-75
+app\repositories\usuarios.py         58     11    81%   84-98, 107-117
+app\repositories\vehiculos.py        46      2    96%   34, 71
+app\schemas\__init__.py               0      0   100%
+app\schemas\conductor.py             75      3    96%   80, 86-87
+app\schemas\pedido.py                52      0   100%
+app\schemas\preferencias.py          28      0   100%
+app\schemas\vehiculo.py              53      0   100%
+app\seed_sprint2.py                  35      2    94%   73-74
+app\services\__init__.py              0      0   100%
+app\services\auditoria.py            13      0   100%
+app\services\autenticacion.py       111     74    33%   73-167, 172-193, 204-215, 218-222, 232
+app\services\autorizacion.py         16      0   100%
+app\services\conductores.py          87      0   100%
+app\services\credenciales.py         20      0   100%
+app\services\pedidos.py              25      0   100%
+app\services\preferencias.py         39      5    87%   31, 34-35, 50-51
+app\services\vehiculos.py            80      0   100%
+---------------------------------------------------------------
+TOTAL                              1791    166    91%
+Required test coverage of 80% reached. Total coverage: 90.73%
+344 passed, 2 warnings in 15.41s

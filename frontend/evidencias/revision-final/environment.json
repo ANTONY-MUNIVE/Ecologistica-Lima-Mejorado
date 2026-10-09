@@ -1,0 +1,45 @@
+{
+  "executedAt": "2026-10-09T02:01:48.198408+00:00",
+  "sourceCommit": "8c3180de705172fd9bc211fbac4258c707c7f43e",
+  "database": {
+    "container": "ecl-sprint2-c2fe0c5adb1f-db",
+    "volume": "ecl-sprint2-c2fe0c5adb1f-data",
+    "development": "ecl_sprint2_dev",
+    "test": "ecl_sprint2_test",
+    "port": 55441
+  },
+  "ports": {
+    "api": 8001,
+    "ui": 5174
+  },
+  "commands": [
+    "python -m alembic upgrade head",
+    "python -m alembic current",
+    "python -m alembic check",
+    "python -m app.seed_sprint2",
+    "python -m pip check",
+    "python -m ruff check .",
+    "python -m ruff format --check .",
+    "python -m pytest tests/unit -q --cov=app --cov-report=term-missing --cov-fail-under=80",
+    "python -m pytest tests/integration -q",
+    "npm ci --ignore-scripts",
+    "npm audit --json",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run test:coverage",
+    "npm run build",
+    "node scripts/verify-sprint2.mjs"
+  ],
+  "frontendTestCommit": "688045a9a7b5bf3f9e915567066ad0d74299d3eb",
+  "originVisibility": "public",
+  "environment": {
+    "os": "Windows",
+    "shell": "PowerShell",
+    "python": "3.12.10",
+    "node": "24.13.0",
+    "npm": "11.6.2",
+    "docker": "29.8.2",
+    "postgresql": "16.9",
+    "postgis": "3.5.2"
+  }
+}

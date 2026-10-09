@@ -17,10 +17,11 @@ UUID del cliente demo. No proyectar `.env.sprint2`, cookies ni contraseñas.
    itinerario a 360 px, aviso de datos ficticios, siguiente parada, alerta,
    detalle con teclado y ejemplo vacío. «Esta vista no consulta rutas reales ni
    sincroniza reportes; no se presenta como operación offline».
-5. **Verificación (60 s).** Mostrar matriz y resultados: 336 unitarias backend,
-   101 integración PostgreSQL/PostGIS, 292 frontend y Chrome/Firefox. Como Auditor,
+5. **Verificación (60 s).** Mostrar matriz y resultados de REVISION_FINAL.md,
+   101 integración PostgreSQL/PostGIS, 293 frontend y Chrome/Firefox. Como Auditor,
    la API deniega conductores y permite métricas. Los contadores no son SLA/P95.
-6. **Pendientes (30 s).** BDD/aceptación de Frank, revisión UX del equipo,
+6. **Pendientes (30 s).** Ratificación de los BDD borrador de Frank y diferencias
+   concretas de contrato (cuenta, licencia, disponibilidad, listado y espacios), revisión UX,
    contrato de itinerarios/reportes para offline y pruebas de carga/EXPLAIN.
    PR abiertos revisados no se fusionaron automáticamente.
 

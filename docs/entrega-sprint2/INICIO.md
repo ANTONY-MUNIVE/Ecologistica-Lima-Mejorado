@@ -1,7 +1,8 @@
 # Iniciar y reproducir la entrega local
 
 Requisitos usados: Windows/PowerShell, Python 3.12.10, Node 24.13.0, npm 11.6.2,
-Docker Desktop con motor 28.5.1. Dependencias fijadas en los lockfiles existentes.
+Docker Desktop (primera ejecución 28.5.1; revisión final 29.8.2).
+Dependencias fijadas en los lockfiles existentes.
 Servicios solo en loopback: UI `http://127.0.0.1:5173`, API
 `http://127.0.0.1:8000`, PostgreSQL `127.0.0.1:55439`.
 
@@ -164,6 +165,42 @@ node scripts/verify-sprint2.mjs
 Chrome debe estar instalado. El script usa Chrome y Firefox de Playwright,
 inicia sesiones reales y modifica únicamente datos sintéticos de la base local.
 Genera nuevos conductores DEMO y actualiza la referencia del cliente semilla.
-Produce `frontend/evidencias/sprint2-local/resultado.json` y capturas. Cada
+Registra el SHA y blobs del código y rechaza fuentes con cambios sin commit.
+Para conservar capturas anteriores, establece `SPRINT2_EVIDENCE_DIR` a un
+directorio nuevo, por ejemplo `evidencias/repeticion-local` desde frontend.
+Permite puertos alternativos con `SPRINT2_API_URL` y `SPRINT2_UI_URL`; deben
+coincidir con VITE_API_BASE_URL y CORS. Produce resultado.json y capturas. Cada
 ejecución sustituye esas capturas locales; las evidencias originales ECL-56 del
 equipo permanecen intactas. Revisa el resultado antes de incorporarlo a Git.
+
+## Recuperar datos sintéticos sin procesos abiertos
+
+Conserva `.env.sprint2` y el volumen nombrado allí. Desde la raíz:
+
+```powershell
+Get-Content .env.sprint2 | ForEach-Object {
+    $key, $value = $_ -split '=', 2
+    if ($key) { [Environment]::SetEnvironmentVariable($key, $value, 'Process') }
+}
+docker start $env:SPRINT2_CONTAINER
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar el contenedor conocido' }
+docker exec $env:SPRINT2_CONTAINER pg_isready -U ecl_synthetic -d ecl_sprint2_dev
+if ($LASTEXITCODE -ne 0) { throw 'Espera a que PostgreSQL esté listo' }
+```
+
+Después inicia API y UI en dos terminales con los bloques anteriores. No vuelvas
+a sembrar: el volumen conserva las cuentas, altas y preferencias guardadas. Si el
+volumen se perdió, una base **nueva** y la semilla reconstruyen solo los datos
+iniciales; no recuperan ediciones posteriores. No hay sincronización remota ni
+copia de seguridad automática.
+
+Para instalar otro entorno mientras existe el archivo privado, utiliza otro
+checkout limpio y un puerto libre (`-DatabasePort 55441`, por ejemplo). No borres
+ni sustituyas la configuración existente. Sigue todos los bloques de instalación,
+migración y semilla en ese checkout. Los puertos 8001/5174 se usaron en la revisión:
+cambia el puerto de uvicorn, el de Vite, VITE_API_BASE_URL y CORS juntos.
+
+La revisión conserva un entorno independiente en `.venv/revision-final`, con
+archivo privado propio y volumen `ecl-sprint2-c2fe0c5adb1f-data`. En un clon nuevo
+ese directorio no existe: usa el procedimiento de instalación nueva. No copies
+sus credenciales a Git. Evidencia de recuperación: REVISION_FINAL.md.

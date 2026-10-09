@@ -1,0 +1,49 @@
+
+> ecologistica-lima-frontend@0.1.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v5.0.1 C:/Users/anton/OneDrive/Desktop/Antony_Proyectos/Taller de proyectos 2/salvaguarda p2/EcoLogistica-Sprint2-Respaldo/.venv/revision-final/frontend
+      Coverage enabled with v8
+
+
+ Test Files  15 passed (15)
+      Tests  293 passed (293)
+   Start at  20:51:45
+   Duration  69.21s (environment 73%, setup 15%, tests 8%, import 2%, transform 1%, worker 1%)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   96.96 |    93.72 |   98.86 |   98.55 |
+ app               |     100 |      100 |     100 |     100 |
+  App.tsx          |     100 |      100 |     100 |     100 |
+ data              |     100 |      100 |     100 |     100 |
+  ...rItinerary.ts |     100 |      100 |     100 |     100 |
+ domain            |     100 |      100 |     100 |     100 |
+  ...rItinerary.ts |     100 |      100 |     100 |     100 |
+ pages             |   95.99 |    90.99 |   98.38 |   97.84 |
+  ...eraryPage.tsx |     100 |      100 |     100 |     100 |
+  DriversPage.tsx  |   91.15 |    83.14 |   96.15 |   97.67 | 68,212
+  HomePage.tsx     |     100 |      100 |     100 |     100 |
+  LoginPage.tsx    |     100 |      100 |     100 |     100 |
+  NotFoundPage.tsx |     100 |      100 |     100 |     100 |
+  ...reatePage.tsx |   92.71 |    87.82 |   96.29 |   94.24 | ...02-203,215-217
+  ...encesPage.tsx |   98.41 |    80.43 |     100 |     100 | 36-37,41,49,61-68
+  VehiclesPage.tsx |     100 |      100 |     100 |     100 |
+ services          |    99.1 |    97.73 |     100 |     100 |
+  api.ts           |     100 |      100 |     100 |     100 |
+  auth.ts          |     100 |      100 |     100 |     100 |
+  drivers.ts       |   96.15 |    91.66 |     100 |     100 | 44,84-95
+  orders.ts        |     100 |    97.22 |     100 |     100 | 109
+  preferences.ts   |   95.83 |    96.29 |     100 |     100 | 31
+  vehicles.ts      |     100 |      100 |     100 |     100 |
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 96.96% ( 767/791 )
+Branches     : 93.72% ( 642/685 )
+Functions    : 98.86% ( 174/176 )
+Lines        : 98.55% ( 680/690 )
+================================================================================

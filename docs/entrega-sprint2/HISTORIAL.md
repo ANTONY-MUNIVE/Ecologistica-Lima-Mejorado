@@ -46,3 +46,31 @@ La ausencia de cambios locales al terminar incluye secretos y dependencias
 ignorados: no implica borrarlos. `.env.sprint2`, `.venv`, `node_modules`, `dist` y
 cobertura permanecen fuera de Git. Solo se versionan capturas necesarias del
 recorrido con datos sintéticos; no se incluyen trazas con cookies o cuerpos privados.
+
+## Revisión final local
+
+Entrada completa `6e984427f87a15e4972b55aa968ae6ed73291824`.
+Incrementos de revisión conservados en commits separados:
+
+| Rama / unidad de revisión | Commit |
+|---|---|
+| fix/ECL-48-errores-validacion | 01b0e26 |
+| fix/ECL-52-privacidad-validacion | 499826c |
+| fix/ECL-49-cuenta-vinculada | e78e1de |
+| test/ECL-54-aislamiento-clientes | cadaa0b |
+| Verificador con SHA/blobs y puertos locales | 715eaf6 |
+| Parche source-map-js y conservación de versiones ajenas | 8f4e931 + 688045a |
+| fix/sprint2-privacidad-login | 8c3180de705172fd9bc211fbac4258c707c7f43e |
+| docs/sprint2-revision-final | Consultar git rev-parse; cierre de evidencia/documentación |
+
+La integración local avanza por fast-forward; no se reescribe ningún commit.
+El nuevo upstream/main contiene documentos de PR #23/#26/#27, revisados pero no
+incorporados automáticamente. Los SHA y diferencias están en REVISION_FINAL.md.
+La comprobación final de fuentes usa:
+
+```powershell
+git diff --exit-code 8c3180de705172fd9bc211fbac4258c707c7f43e HEAD -- backend frontend/src frontend/package-lock.json frontend/scripts
+git diff --stat 099838bdec64c16c4ecaee04644f2f69ec2c46dc HEAD
+git rev-parse HEAD
+git status --porcelain
+```

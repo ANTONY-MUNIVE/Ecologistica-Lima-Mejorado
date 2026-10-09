@@ -1,4 +1,8 @@
-# Validaciones ejecutadas — 8/oct/2026
+# Validaciones de la primera entrega — 8/oct/2026
+
+**Registro histórico anterior a la revisión final.** Estas capturas no contienen
+SHA de origen y no acreditan por sí solas las correcciones posteriores. Resultados
+y evidencias del código revisado: [REVISION_FINAL.md](REVISION_FINAL.md).
 
 Entorno local Windows, Python 3.12.10, Node 24.13.0/npm 11.6.2.
 PostgreSQL **16.9** y PostGIS **3.5.2** del digest fijado en el proyecto.
