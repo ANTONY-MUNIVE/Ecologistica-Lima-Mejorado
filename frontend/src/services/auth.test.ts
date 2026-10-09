@@ -1,4 +1,4 @@
-import { AuthServiceError, login } from './auth'
+import { AuthServiceError, login, logout } from './auth'
 import type { AuthRole, LoginRequest } from './auth'
 
 const payload: LoginRequest = {
@@ -152,5 +152,26 @@ describe('servicio de autenticación', () => {
       message: 'No se pudo iniciar sesión.',
     })
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('revoca la sesión con POST /logout y credenciales de cookie', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(logout()).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:8000/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+  })
+
+  it('rechaza un logout que no confirma 204', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 503 })))
+
+    await expect(logout()).rejects.toMatchObject({
+      kind: 'unexpected',
+      message: 'No se pudo cerrar sesión.',
+      status: 503,
+    })
   })
 })

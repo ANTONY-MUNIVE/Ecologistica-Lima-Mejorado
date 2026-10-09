@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
-import { login } from '../services/auth'
+import { login, logout } from '../services/auth'
 import type { AuthRole } from '../services/auth'
 import { createVehicle, listVehicles } from '../services/vehicles'
 import type { VehicleResponse } from '../services/vehicles'
@@ -9,10 +9,11 @@ import { App } from './App'
 
 vi.mock('../services/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/auth')>()
-  return { ...actual, login: vi.fn() }
+  return { ...actual, login: vi.fn(), logout: vi.fn() }
 })
 
 const loginMock = vi.mocked(login)
+const logoutMock = vi.mocked(logout)
 const usuario_id = '123e4567-e89b-12d3-a456-426614174000'
 
 vi.mock('../services/vehicles', async (importOriginal) => {
@@ -65,6 +66,7 @@ async function signIn(role: AuthRole) {
 describe('App', () => {
   beforeEach(() => {
     loginMock.mockReset()
+    logoutMock.mockReset().mockResolvedValue(undefined)
     listVehiclesMock.mockReset().mockResolvedValue([vehicle])
     createVehicleMock.mockReset().mockResolvedValue(vehicle)
   })
@@ -87,6 +89,32 @@ describe('App', () => {
     await user.click(screen.getByRole('link', { name: 'Iniciar sesión' }))
     expect(screen.getByTestId('path')).toHaveTextContent('/login')
     expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+  })
+
+  it('cierra la sesión, revoca el contrato y vuelve a exigir login', async () => {
+    renderAt('/login')
+    const user = await signIn('OPERADOR')
+
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+
+    expect(logoutMock).toHaveBeenCalledExactlyOnceWith()
+    expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Abrir ruta de pedido' }))
+    expect(screen.getByTestId('path')).toHaveTextContent('/login')
+  })
+
+  it('conserva la identidad y muestra un error si el logout falla', async () => {
+    renderAt('/login')
+    const user = await signIn('OPERADOR')
+    logoutMock.mockRejectedValue(new Error('network'))
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
+
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('No se pudo cerrar sesión.')
+    expect(screen.getByText('Rol: OPERADOR')).toBeInTheDocument()
   })
 
   it('muestra la página 404 para una ruta desconocida y permite volver al inicio', async () => {

@@ -8,6 +8,7 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { OrderCreatePage } from '../pages/OrderCreatePage'
 import { PreferencesPage } from '../pages/PreferencesPage'
 import { VehiclesPage } from '../pages/VehiclesPage'
+import { AuthServiceError, logout } from '../services/auth'
 import type { AuthRole, LoginResponse } from '../services/auth'
 
 function canCreateOrders(role: AuthRole): boolean {
@@ -30,13 +31,31 @@ function AccessDenied() {
 
 export function App() {
   const [identity, setIdentity] = useState<LoginResponse | null>(null)
+  const [logoutError, setLogoutError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
   const navigate = useNavigate()
   const createOrdersAllowed = identity !== null && canCreateOrders(identity.rol)
   const vehicleAccess = getVehicleAccess(identity?.rol)
 
   function handleLoginSuccess(loggedInIdentity: LoginResponse) {
     setIdentity(loggedInIdentity)
+    setLogoutError('')
     void navigate('/', { replace: true })
+  }
+
+  async function handleLogout() {
+    if (loggingOut) return
+    setLoggingOut(true)
+    setLogoutError('')
+    try {
+      await logout()
+      setIdentity(null)
+      void navigate('/login', { replace: true })
+    } catch (error) {
+      setLogoutError(error instanceof AuthServiceError ? error.message : 'No se pudo cerrar sesión.')
+    } finally {
+      setLoggingOut(false)
+    }
   }
 
   return (
@@ -47,7 +66,14 @@ export function App() {
             EcoLogística Lima
           </Link>
           <div className="nav-actions">
-            {identity ? <span className="identity-role">Rol: {identity.rol}</span> : (
+            {identity ? (
+              <div className="user-menu" aria-label="Menú de usuario">
+                <span className="identity-role">Rol: {identity.rol}</span>
+                <button className="logout-button" type="button" disabled={loggingOut} onClick={() => { void handleLogout() }}>
+                  {loggingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
+                </button>
+              </div>
+            ) : (
               <Link className="nav-link" to="/login">Iniciar sesión</Link>
             )}
             {createOrdersAllowed ? (
@@ -63,6 +89,7 @@ export function App() {
             ) : null}
           </div>
         </nav>
+        {logoutError ? <div className="container nav-alert" role="alert">{logoutError}</div> : null}
       </header>
       <main id="contenido-principal" className="container main-content">
         <Routes>

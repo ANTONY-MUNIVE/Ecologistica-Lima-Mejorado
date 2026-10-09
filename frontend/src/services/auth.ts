@@ -151,3 +151,37 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   }
   return { usuario_id: body.usuario_id, rol: body.rol }
 }
+
+export async function logout(): Promise<void> {
+  let url: string
+  try {
+    url = buildApiUrl('logout')
+  } catch {
+    throw new AuthServiceError('unexpected', 'No se pudo cerrar sesión.')
+  }
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    throw new AuthServiceError('network', 'No se pudo conectar con el servicio para cerrar sesión.')
+  }
+
+  if (!response.ok) {
+    throw new AuthServiceError(
+      response.status === 401 ? 'unauthorized' : 'unexpected',
+      response.status === 401
+        ? 'La sesión ya no es válida.'
+        : 'No se pudo cerrar sesión.',
+      { status: response.status },
+    )
+  }
+  if (response.status !== 204) {
+    throw new AuthServiceError('unexpected', 'El servicio devolvió una respuesta inválida.', {
+      status: response.status,
+    })
+  }
+}

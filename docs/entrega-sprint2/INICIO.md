@@ -97,33 +97,29 @@ ceros son datos de ensayo, sin atribución a personas reales.
 
 ## Iniciar API y UI
 
-En una terminal desde la raíz, carga `.env.sprint2` como en el bloque anterior:
+Desde la raíz del repositorio, ejecutar el script reproducible:
 
 ```powershell
-Get-Content .env.sprint2 | ForEach-Object {
-    $key, $value = $_ -split '=', 2
-    if ($key) { [Environment]::SetEnvironmentVariable($key, $value, 'Process') }
-}
-$env:APP_ENV = 'development'
-$env:CORS_ALLOWED_ORIGINS = '["http://127.0.0.1:5173"]'
-Set-Location backend
-$env:PYTHONPATH = '.venv/deps;.'
-python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-sprint2.ps1
 ```
 
-En otra terminal desde la raíz:
+El script localiza la raíz desde `$PSScriptRoot`, carga `.env.sprint2` sin
+imprimir sus valores, comprueba Docker, verifica el contenedor existente y lo
+inicia únicamente si está detenido. Nunca crea otro contenedor ni elimina o
+reinicia volúmenes. También comprueba PostgreSQL en `127.0.0.1:55439`.
 
-```powershell
-Set-Location frontend
-$env:VITE_API_BASE_URL = 'http://127.0.0.1:8000'
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
-```
+El backend y el frontend se abren en terminales PowerShell separadas. Antes de
+iniciar cada servicio, el script consulta sus puertos y endpoints: si ya
+responde correctamente, lo conserva y lo reporta; si el puerto está ocupado
+pero el servicio no es saludable, termina sin matar procesos ni iniciar un
+duplicado. Al final verifica `http://127.0.0.1:8000/health/ready`.
 
 Verifica `/health`, `/health/ready`, `/docs` y `/openapi.json` en el puerto 8000.
 Usa **127.0.0.1** en ambos servicios para conservar cookies SameSite y CORS.
 La identidad UI actual vive en memoria: recargar toda la página requiere volver
-a iniciar sesión. Cambia de rol con una nueva pestaña/contexto y login; no hay
-control visual de logout añadido en este incremento.
+a iniciar sesión. Cambia de rol con una nueva pestaña/contexto y login. El menú
+de usuario incluye **Cerrar sesión**, que revoca la sesión mediante `POST
+/logout` antes de volver a `/login`.
 
 Para detener: Ctrl+C en las terminales iniciadas por ti; `docker stop` sobre el
 nombre exacto creado por el script. Conserva el volumen. No ejecutes downgrade
