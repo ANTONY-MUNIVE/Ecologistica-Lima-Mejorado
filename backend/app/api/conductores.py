@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.api.dependencies import get_authenticated_session, require_permission
+from app.api.validation import PrivateValidationRoute
 from app.core.rbac import Contexto, Identidad, Permiso
 from app.repositories.auditoria import AuditStorageError
 from app.schemas.conductor import DriverCreate, DriverResponse, DriverUpdate
@@ -19,7 +20,9 @@ from app.services.conductores import (
     DriverUnavailable,
 )
 
-router = APIRouter(prefix="/conductores", tags=["conductores"])
+router = APIRouter(
+    prefix="/conductores", tags=["conductores"], route_class=PrivateValidationRoute
+)
 
 
 def get_driver_service(request: Request) -> ConductorService:

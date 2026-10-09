@@ -155,3 +155,32 @@ def test_missing_session_is_401():
     app.dependency_overrides[get_authentication_service] = lambda: Mock()
     with TestClient(app) as client:
         assert client.get("/conductores").status_code == 401
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"dni": "PRIVATE-SYNTHETIC-DNI"},
+        {"disponible_hasta": "2026-10-09T13:00:00+00:00"},
+        {"PRIVATE-PROPERTY": "PRIVATE-VALUE"},
+    ],
+)
+def test_validation_does_not_echo_private_input_or_context(change):
+    for client, service, _identity in client_for():
+        response = client.post("/conductores", json={**payload(), **change})
+        assert response.status_code == 422
+        for marker in ("PRIVATE-", "12345678", "000000000", "SYN-001"):
+            assert marker not in response.text
+        assert all(
+            set(error) == {"type", "loc", "msg"} for error in response.json()["detail"]
+        )
+        service.create.assert_not_called()
+
+
+def test_invalid_path_does_not_echo_identifier():
+    for client, service, _identity in client_for():
+        response = client.get("/conductores/PRIVATE-IDENTIFIER")
+        assert response.status_code == 422
+        assert "PRIVATE-IDENTIFIER" not in response.text
+        assert response.json()["detail"][0]["loc"] == ["path", "driver_id"]
+        service.get.assert_not_called()
