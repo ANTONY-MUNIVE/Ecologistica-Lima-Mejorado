@@ -111,3 +111,21 @@ def test_anonymous_preference_read_is_denied():
     app.dependency_overrides[get_authentication_service] = lambda: Mock()
     with TestClient(app) as client:
         assert client.get(f"/clientes/{uuid4()}/preferencias").status_code == 401
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"referencia": "PRIVATE-REFERENCE" * 30},
+        {"PRIVATE-PROPERTY": "PRIVATE-VALUE"},
+    ],
+)
+def test_invalid_preference_response_does_not_echo_data(change):
+    for client, service in client_for():
+        response = client.patch(f"/clientes/{uuid4()}/preferencias", json=change)
+        assert response.status_code == 422
+        assert "PRIVATE-" not in response.text
+        assert all(
+            set(item) == {"type", "loc", "msg"} for item in response.json()["detail"]
+        )
+        service.update.assert_not_called()

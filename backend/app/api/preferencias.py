@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.api.dependencies import require_permission
+from app.api.validation import PrivateValidationRoute
 from app.core.rbac import Identidad, Permiso
 from app.schemas.preferencias import PreferenciasResponse, PreferenciasUpdate
 from app.services.preferencias import (
@@ -14,7 +15,9 @@ from app.services.preferencias import (
     PreferenciasService,
 )
 
-router = APIRouter(prefix="/clientes", tags=["preferencias"])
+router = APIRouter(
+    prefix="/clientes", tags=["preferencias"], route_class=PrivateValidationRoute
+)
 
 
 def get_preference_service(request: Request) -> PreferenciasService:
