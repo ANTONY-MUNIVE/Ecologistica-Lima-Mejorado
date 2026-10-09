@@ -28,6 +28,15 @@ def test_preferences_persist_and_support_order_without_implicit_window(
         session.add(customer)
         session.flush()
         customer_id = customer.cliente_id
+        other = Cliente(
+            nombre="DEMO Otro cliente sintético",
+            horario_preferido="Tarde",
+            referencia="DEMO Referencia de otro cliente",
+            restriccion_acceso="DEMO Avisar al llegar",
+        )
+        session.add(other)
+        session.flush()
+        other_id = other.cliente_id
         for role in ("OPERADOR", "CONDUCTOR", "AUDITOR"):
             CredentialService(UsuarioRepository(session)).create(
                 f"{role.lower()}@example.test", "synthetic-test-password", role
@@ -62,7 +71,13 @@ def test_preferences_persist_and_support_order_without_implicit_window(
             assert client.patch(path, json=preferences).status_code == 200
             assert client.patch(path, json={"referencia": "  "}).status_code == 422
             assert (
-                client.patch(path, json={"horario_preferido": "x" * 121}).status_code
+                client.patch(
+                    path,
+                    json={
+                        "horario_preferido": "x" * 121,
+                        "referencia": "No debe persistir parcialmente",
+                    },
+                ).status_code
                 == 422
             )
             assert (
@@ -73,6 +88,14 @@ def test_preferences_persist_and_support_order_without_implicit_window(
             )
             retrieved = client.get(path).json()
             assert all(retrieved[key] == value for key, value in preferences.items())
+            other_response = client.get(f"/clientes/{other_id}/preferencias")
+            assert other_response.status_code == 200
+            assert other_response.json() == {
+                "cliente_id": str(other_id),
+                "horario_preferido": "Tarde",
+                "referencia": "DEMO Referencia de otro cliente",
+                "restriccion_acceso": "DEMO Avisar al llegar",
+            }
             order = client.post(
                 "/pedidos",
                 json={
@@ -95,6 +118,9 @@ def test_preferences_persist_and_support_order_without_implicit_window(
             stored = session.get(Cliente, customer_id)
             assert stored.referencia is None
             assert stored.horario_preferido == preferences["horario_preferido"]
+            assert session.get(Cliente, other_id).referencia == (
+                "DEMO Referencia de otro cliente"
+            )
             saved_order = session.scalar(select(Pedido))
             assert saved_order.referencia == preferences["referencia"]
             assert saved_order.ventana_inicio.hour == 14
