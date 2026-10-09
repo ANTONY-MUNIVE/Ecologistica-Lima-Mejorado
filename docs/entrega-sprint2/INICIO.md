@@ -201,3 +201,34 @@ La revisión conserva un entorno independiente en `.venv/revision-final`, con
 archivo privado propio y volumen `ecl-sprint2-c2fe0c5adb1f-data`. En un clon nuevo
 ese directorio no existe: usa el procedimiento de instalación nueva. No copies
 sus credenciales a Git. Evidencia de recuperación: REVISION_FINAL.md.
+
+## Mapa y recorrido de demostración
+
+La pantalla de itinerario conserva datos sintéticos y no consulta una API de
+asignaciones reales. Para activar el mapa en el navegador, crea o edita
+`frontend/.env` (archivo local ignorado por Git) y configura:
+
+```text
+VITE_GOOGLE_MAPS_API_KEY=
+```
+
+La integración usa Maps JavaScript API con la librería `marker` y
+`AdvancedMarkerElement` para los marcadores numerados. El recorrido vial usa
+Routes API (`directions/v2:computeRoutes`) y solo muestra distancia, duración
+y polilínea cuando Google devuelve una respuesta válida. En ese caso se
+etiqueta **Recorrido de demostración**: el orden de paradas sintéticas no es
+una optimización ni una asignación operativa.
+
+En Google Cloud se deben habilitar, con una cuenta del proyecto y facturación
+asociada, Maps JavaScript API y Routes API. Google puede cobrar por estas
+solicitudes según la cuenta y el volumen; este repositorio no habilita
+facturación. La clave `VITE_GOOGLE_MAPS_API_KEY` es visible en el navegador:
+restrínjela por sitios web (orígenes locales y los dominios de despliegue) y
+por las dos APIs necesarias. Nunca coloque credenciales privadas de servicios
+en `VITE_*`, ni envíe DNI, teléfonos o credenciales a Google.
+
+Sin clave, sin APIs habilitadas, con cuota agotada o ante una respuesta
+incompleta, la lista de paradas y el detalle siguen utilizables y se muestra
+el estado de configuración o error. No se dibuja una línea recta como
+recorrido vial. La llamada real a Google queda pendiente de verificar en un
+proyecto con clave restringida; las pruebas locales sin clave son simuladas.
