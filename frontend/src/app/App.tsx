@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { HomePage } from '../pages/HomePage'
 import { DriverItineraryPage } from '../pages/DriverItineraryPage'
@@ -29,13 +29,26 @@ function AccessDenied() {
   )
 }
 
+type Theme = 'light' | 'dark'
+
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'light'
+  return window.localStorage.getItem('ecologistica-theme') === 'dark' ? 'dark' : 'light'
+}
+
 export function App() {
   const [identity, setIdentity] = useState<LoginResponse | null>(null)
   const [logoutError, setLogoutError] = useState('')
   const [loggingOut, setLoggingOut] = useState(false)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const navigate = useNavigate()
   const createOrdersAllowed = identity !== null && canCreateOrders(identity.rol)
   const vehicleAccess = getVehicleAccess(identity?.rol)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('ecologistica-theme', theme)
+  }, [theme])
 
   function handleLoginSuccess(loggedInIdentity: LoginResponse) {
     setIdentity(loggedInIdentity)
@@ -63,9 +76,22 @@ export function App() {
       <header className="site-header">
         <nav className="container" aria-label="Navegación principal">
           <Link className="brand" to="/">
-            EcoLogística Lima
+            <span className="brand-logo-frame">
+              <img className="brand-logo" src="/logo-ecologistica-lima.jpg" alt="" />
+            </span>
+            <span className="brand-name">EcoLogística Lima</span>
           </Link>
           <div className="nav-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+              aria-pressed={theme === 'dark'}
+              onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+            >
+              <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+              <span>{theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}</span>
+            </button>
             {identity ? (
               <div className="user-menu" aria-label="Menú de usuario">
                 <span className="identity-role">Rol: {identity.rol}</span>
