@@ -41,7 +41,8 @@ la extensión Tiger como tablas de aplicación. No elimina contenedores ni datos
 Si hay un fallo intermedio, revisa los recursos nombrados en `.env.sprint2`;
 no sustituyas el archivo para continuar sin comprobarlos.
 
-Instala dependencias locales (solo en una instalación nueva):
+Instala dependencias locales en una instalación nueva. Si cambia un lockfile,
+vuelve a instalar sus dependencias antes de arrancar:
 
 ```powershell
 Set-Location backend

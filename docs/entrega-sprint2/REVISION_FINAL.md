@@ -173,6 +173,13 @@ versionados. Los .env.example son ejemplos; los marcadores de credenciales en
 tests son ficticios. Las cadenas de conexión privadas no se copiaron a evidencias.
 Se verificaron diffs de línea base y evidencias del equipo: preservados.
 
+Al cierre se verificaron las 25 huellas del manifiesto contra blobs de Git y se
+repitió el barrido sobre los **287 archivos versionados**: sin coincidencias de
+secretos privados ni rutas prohibidas. El clon principal quedó con `npm ci`
+actualizado y `npm audit` cero. Se detuvieron los procesos conocidos de la demo
+previa y de esta revisión; los volúmenes se conservan. Para exponer, inicia según
+INICIO.md; no hay un servidor anterior del que dependa el procedimiento.
+
 ## Riesgos para la exposición y aceptación
 
 1. Las diferencias de contrato BDD anteriores son reales y requieren ratificación;
